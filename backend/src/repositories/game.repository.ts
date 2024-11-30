@@ -1,8 +1,6 @@
 import { GameType } from '@enums/game.enums';
-import { PrismaClient } from '@prisma/client';
-import { CreateGameDto, CreateGameSchemaWithRequiredFields } from 'src/schemas';
-
-const prisma = new PrismaClient();
+import { prisma } from 'src/db';
+import {  CreateGameSchemaWithRequiredFields } from 'src/schemas';
 
 async function createGame(data: CreateGameSchemaWithRequiredFields) {
 

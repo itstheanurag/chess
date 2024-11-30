@@ -1,8 +1,6 @@
 import { GameRequestStatusEnum } from '@enums/index';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from 'src/db';
 import { CreateGameRequestDto } from 'src/schemas';
-
-const prisma = new PrismaClient();
 
 // create a game request
 async function createGameRequest(data: CreateGameRequestDto) {
