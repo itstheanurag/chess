@@ -1,0 +1,129 @@
+generator client { 
+  provider = "prisma-client-js" 
+} 
+ 
+datasource db { 
+  provider = "postgresql" 
+  url      = env("DATABASE_URL") 
+} 
+ 
+model Game { 
+  id                    String       @id @default(cuid()) 
+  status                String       // Game status (e.g., "waiting", "in-progress", "completed") 
+  players               Player[]     // Players in the game 
+  spectators            Spectator[]  // Spectators in the game 
+  maxSpectatorCount     Int          // Maximum number of spectators allowed 
+  currentSpectatorCount Int          @default(0) // Current number of spectators 
+  startedAt             DateTime?    // Timestamp when the game starts 
+  endedAt               DateTime?    // Timestamp when the game ends 
+  winner                String?      // Winner's ID or name (optional) 
+  gameType              String       // 'public' or 'private' 
+   
+  // Game state 
+  gameState             String?      // Nullable field to store the initial or current state of the game (e.g., FEN string or JSON object) 
+ 
+  // Relationships and tracking 
+  createdBy             String       // The ID of the user who created the game 
+  createdByUser         User         @relation("CreatedGames", fields: [createdBy], references: [id]) 
+  gameMoves             GameMove[]   // Relation to game moves 
+  gameRequests          GameRequest[] // Relation to game requests 
+ 
+  createdAt             DateTime     @default(now()) 
+  updatedAt             DateTime     @updatedAt 
+  deletedAt             DateTime?    // Optional field for soft deletes 
+} 
+ 
+model User { 
+  id          String   @id @default(cuid()) 
+  username    String   @unique 
+  password    String   // Hashed password 
+  refreshToken String? // Optional refresh token 
+  socketId    String?  // Optional socket connection management 
+  player      Player?  // Optional link to a player 
+ 
+  // Created games 
+  createdGames         Game[]        @relation("CreatedGames") 
+ 
+  // Game moves 
+  gameMoves            GameMove[]    // Tracks moves made by the user 
+ 
+  // Sent game requests 
+  sentGameRequests     GameRequest[] @relation("SentGameRequests") 
+  // Received game requests 
+  receivedGameRequests GameRequest[] @relation("ReceivedGameRequests") 
+ 
+  createdAt   DateTime @default(now()) 
+  updatedAt   DateTime @updatedAt 
+  deletedAt   DateTime? // Timestamp when the user is deleted (soft delete) 
+} 
+ 
+model Player { 
+  id        String  @id @default(cuid()) 
+  name      String 
+  color     String  // Player's chosen color (e.g., "white" or "black") 
+  gameId    String 
+  game      Game    @relation(fields: [gameId], references: [id]) 
+  userId    String  @unique 
+  user      User    @relation(fields: [userId], references: [id]) 
+ 
+  createdAt DateTime @default(now()) 
+  updatedAt DateTime @updatedAt 
+  deletedAt DateTime? 
+} 
+ 
+model Spectator { 
+  id        String   @id @default(cuid()) 
+  gameId    String 
+  game      Game     @relation(fields: [gameId], references: [id]) 
+ 
+  joinedAt  DateTime @default(now()) 
+  leftAt    DateTime? 
+ 
+  createdAt DateTime @default(now()) 
+  updatedAt DateTime @updatedAt 
+  deletedAt DateTime? 
+} 
+
+// New model to track game moves 
+model GameMove { 
+  id        String   @id @default(cuid()) 
+  gameId    String 
+  game      Game     @relation(fields: [gameId], references: [id]) 
+  
+  // Who made the move 
+  userId    String 
+  user      User     @relation(fields: [userId], references: [id]) 
+  
+  // Move details 
+  moveNotation String  // Chess move in standard notation (e.g., "e4", "Nf3") 
+  moveNumber   Int     // Move sequence number 
+  fenState     String  // FEN string representing board state after this move 
+  
+  createdAt DateTime @default(now()) 
+  updatedAt DateTime @updatedAt 
+  deletedAt DateTime? 
+} 
+
+// New model for game requests 
+model GameRequest { 
+  id            String   @id @default(cuid()) 
+  gameId        String 
+  game          Game     @relation(fields: [gameId], references: [id]) 
+  
+  // Sender and receiver of the game request 
+  senderId      String 
+  sender        User     @relation("SentGameRequests", fields: [senderId], references: [id]) 
+  
+  receiverId    String 
+  receiver      User     @relation("ReceivedGameRequests", fields: [receiverId], references: [id]) 
+  
+  // Request status 
+  status        String   @default("pending") // "pending", "accepted", "rejected" 
+  
+  // Optional message with the request 
+  message       String? 
+  
+  createdAt     DateTime @default(now()) 
+  updatedAt     DateTime @updatedAt 
+  deletedAt DateTime? 
+}
