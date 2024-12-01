@@ -5,12 +5,14 @@ import {
   createGame,
   findAllPublicActiveGamesWithPlayers,
   findOneWithGameRequests,
+  joinGameAsPlayer,
+  updateGameStatusAsStarted
 } from "src/repositories";
 import { CreateGameSchemaWithRequiredFields } from "src/schemas";
 import { Chess } from "chess.js";
 import { GameRequestStatusEnum, GameStatus, GameType } from "@enums/game.enums";
 
-async function GetPublicGames(
+export async function GetPublicGames(
   req: Request,
   res: Response
 ): Promise<Response<{ success: boolean; data: Game[] }>> {
@@ -29,7 +31,7 @@ async function GetPublicGames(
   }
 }
 
-async function createGameService(
+export async function createGameService(
   req: Request,
   res: Response
 ): Promise<Response<{ success: boolean; message: string; data: Game }>> {
@@ -62,10 +64,10 @@ async function createGameService(
   }
 }
 
-async function JoinRoomAsPlayer(req: Request, res: Response) {
+export async function JoinRoomAsPlayer(req: Request, res: Response) {
   try {
     const { gameId } = req.params;
-    const { status, name } = req.body;
+    const { status } = req.body;
     const userId = req.user?.id ?? "";
 
     const game = await findOneWithGameRequests(gameId);
@@ -76,10 +78,26 @@ async function JoinRoomAsPlayer(req: Request, res: Response) {
       });
     }
 
+    if(game.players?.length > 1) {
+      return res.send(400).json({
+        status: false,
+        message: "Can't join an ongoing game"
+      })
+    }
+
     // Check if the game has a matching game request where the receiverId matches
     if (game.gameType === GameType.PRIVATE) {
       return await handlePrivateGamesJoin(req, res, { game, userId, status });
     }
+
+    await joinGameAsPlayer(game.id, userId);
+    await updateGameStatusAsStarted(game.id);
+
+    return res.send(200).json({
+      success: true,
+      message: "Successfully joined the game",
+      data: null
+    })
   } catch (error: any) {
     return res.status(500).json({
       success: false,
@@ -89,7 +107,7 @@ async function JoinRoomAsPlayer(req: Request, res: Response) {
   }
 }
 
-async function handlePrivateGamesJoin(
+export async function handlePrivateGamesJoin(
   req: Request,
   res: Response,
   data: { game: any; userId: string; status: GameRequestStatusEnum }
@@ -117,6 +135,14 @@ async function handlePrivateGamesJoin(
       data: null,
     });
   }
+
+  await updateGameStatusAsStarted(data.game.id);
+
+  return res.send(200).json({
+    success: true,
+    message: "Game has now started",
+    data: null
+  })
 }
 
-export { GetPublicGames, createGameService, JoinRoomAsPlayer };
+// export { GetPublicGames, createGameService, JoinRoomAsPlayer };

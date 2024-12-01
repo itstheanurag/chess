@@ -1,18 +1,17 @@
-import { GameType } from '@enums/game.enums';
-import { prisma } from 'src/db';
-import {  CreateGameSchemaWithRequiredFields } from 'src/schemas';
+import { GameStatus, GameType } from "@enums/game.enums";
+import { prisma } from "src/db";
+import { CreateGameSchemaWithRequiredFields } from "src/schemas";
 
-async function createGame(data: CreateGameSchemaWithRequiredFields) {
-
+export async function createGame(data: CreateGameSchemaWithRequiredFields) {
   try {
     const game = await prisma.$transaction(async (tx) => {
       const createdGame = await tx.game.create({ data });
       await tx.player.create({
         data: {
           name: `Player (white)`,
-          color: 'white',
+          color: "white",
           gameId: createdGame.id,
-          userId: data.createdBy ?? ""
+          userId: data.createdBy ?? "",
         },
       });
       return createdGame;
@@ -26,12 +25,12 @@ async function createGame(data: CreateGameSchemaWithRequiredFields) {
 }
 
 // async findAllPublicGames
-async function findAllPublicActiveGamesWithPlayers() {
+export async function findAllPublicActiveGamesWithPlayers() {
   return await prisma.game.findMany({
     where: {
       gameType: GameType.PUBLIC,
-      status: { not: 'completed' },
-      deletedAt: null
+      status: { not: "completed" },
+      deletedAt: null,
     },
     include: {
       players: true,
@@ -39,13 +38,36 @@ async function findAllPublicActiveGamesWithPlayers() {
   });
 }
 
-async function findOneWithGameRequests(id: string) {
+export async function findOneWithGameRequests(id: string) {
   return await prisma.game.findUnique({
-    where: {id},
+    where: { id },
     include: {
       gameRequests: true,
+      players: true,
     },
-  })
+  });
 }
 
-export { createGame, findAllPublicActiveGamesWithPlayers, findOneWithGameRequests };
+export async function joinGameAsPlayer(gameId: string, userId: string) {
+  return await prisma.player.create({
+    data: {
+      name: `Player (white)`,
+      color: "white",
+      gameId: gameId,
+      userId: userId,
+    },
+  });
+}
+
+export async function updateGameStatusAsStarted(id: string) {
+  return await prisma.game.update({
+    where: {
+      id,
+    },
+    data: {
+      status: GameStatus.IN_PROGRESS,
+      startedAt: new Date()
+    },
+  });
+}
+

@@ -3,14 +3,14 @@ import { prisma } from 'src/db';
 import { CreateGameRequestDto } from 'src/schemas';
 
 // create a game request
-async function createGameRequest(data: CreateGameRequestDto) {
+export async function createGameRequest(data: CreateGameRequestDto) {
   return await prisma.gameRequest.create({
     data:{ ...data, status: GameRequestStatusEnum.PENDING,}
   });
 }
 
 // find all the games you are invited to
-async function findGamesForUser(gameId: string, receiverId: string) {
+export async function findGamesForUser(gameId: string, receiverId: string) {
   return await prisma.gameRequest.findMany({
     where: {
       gameId,
@@ -25,7 +25,7 @@ async function findGamesForUser(gameId: string, receiverId: string) {
 }
 
 // accept or decline a game
-async function acceptOrDeclineTheGame(
+export async function acceptOrDeclineTheGame(
   gameRequestId: string, 
   status: GameRequestStatusEnum
 ) {
@@ -39,7 +39,7 @@ async function acceptOrDeclineTheGame(
   });
 }
 
-async function deleteGameRequest(gameRequestId: string) {
+export async function deleteGameRequest(gameRequestId: string) {
   return await prisma.gameRequest.update({
     where: {
       id: gameRequestId,
@@ -49,6 +49,3 @@ async function deleteGameRequest(gameRequestId: string) {
     },
   });
 }
-
-
-export { createGameRequest, findGamesForUser, acceptOrDeclineTheGame, deleteGameRequest};
