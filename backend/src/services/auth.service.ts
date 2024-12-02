@@ -16,15 +16,11 @@ const registerUser = async (req: Request, res: Response<UserCreatedResponse>) =>
   try {
     const { username, password } = req.body;
 
-    // Check if user already exists
     const existingUser = await findUser(username);
     if (existingUser) {
       return res.status(400).json({ message: "User already exists" });
     }
-
-    // Hash password
     const passwordhash = await hashPassword(password);
-    // Create user
     const user = await createUser({username, password: passwordhash})
 
     return res.status(201).json({ success: true, message: "User registered successfully", data: user });
@@ -39,13 +35,11 @@ const loginUser = async (req: Request, res: Response<LoginResponse>) => {
   try {
     const { username, password } = req.body;
 
-    // Check if user exists
     const user = await findUser(username);
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // Validate password
     const isPasswordValid = comparePassword(password, user.password)
     if (!isPasswordValid) {
       return res.status(401).json({ message: "Invalid credentials" });
@@ -78,14 +72,12 @@ const reLoginUser = async(req: Request, res: Response<AccessToken>) =>{
   }
 
   try {
-    const decoded = verifyRefreshToken(refreshToken); // Verify refresh token
-    
-    // Validate stored refresh token
-    if (tokens[decoded.id] !== refreshToken) { // Assuming `decoded.userId` is part of the token payload
+    const decoded = verifyRefreshToken(refreshToken); 
+
+    if (tokens[decoded.id] !== refreshToken) { 
       return res.status(403).json({ message: "Invalid refresh token" });
     }
 
-    // Generate a new access token
     const accessToken = generateAccessToken(decoded.id);
 
     return res.status(200).json({

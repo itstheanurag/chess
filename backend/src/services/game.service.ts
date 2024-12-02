@@ -123,12 +123,9 @@ export async function handlePrivateGamesJoin(
     });
   }
 
-  // will update the game status accepted;
   await acceptOrDeclineTheGame(gameRequest.id, data.status);
 
   if (data.status === GameRequestStatusEnum.REJECT) {
-    // we need to think what to do here
-    // await deleteGameRequest(gameRequest.id);
     return res.status(200).json({
       success: true,
       message: "successfully rejected the game request",
@@ -145,4 +142,3 @@ export async function handlePrivateGamesJoin(
   })
 }
 
-// export { GetPublicGames, createGameService, JoinRoomAsPlayer };
