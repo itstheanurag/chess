@@ -38,6 +38,7 @@ const authRouter = express.Router();
  */
 const registerUserHandler = async (req: Request, res: Response<UserCreatedResponse>) => {
   await registerUser(req, res);
+  return;
 };
 
 /**
@@ -69,6 +70,7 @@ const registerUserHandler = async (req: Request, res: Response<UserCreatedRespon
  */
 const loginUserHandler = async (req: Request, res: Response<LoginResponse>) => {
   await loginUser(req, res);
+  return;
 };
 
 /**
@@ -98,6 +100,7 @@ const loginUserHandler = async (req: Request, res: Response<LoginResponse>) => {
  */
 const reLoginUserHandler = async (req: Request, res: Response<AccessToken>) => {
   await reLoginUser(req, res);
+  return;
 };
 
 authRouter.post(AuthRoutesEnums.REGISTER, GlobalRequestValidator({ body: CreateUserShema }), registerUserHandler);

@@ -2,10 +2,10 @@ import express, { Request, Response } from 'express';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import { handleSocketConnections } from './socket/socket';
-import swaggerUi from 'swagger-ui-express';
-import swaggerJsdoc from 'swagger-jsdoc';
 import * as Routers from './routes';
 import { setupSwagger } from './swagger/swagger';
+import cors from 'cors';
+
 
 
 const app = express();
@@ -18,6 +18,13 @@ const io = new Server(httpServer, {
     methods: ["GET", "POST"]
   }
 });
+
+
+app.use(cors({
+  origin: '*',  // Make sure the frontend URL is correct
+  methods: ['GET', 'POST'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 
 setupSwagger(app);
 app.use(express.json());

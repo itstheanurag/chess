@@ -27,7 +27,7 @@ const registerUser = async (req: Request, res: Response<UserCreatedResponse>) =>
     // Create user
     const user = await createUser({username, password: passwordhash})
 
-    res.status(201).json({ success: true, message: "User registered successfully", data: user });
+    return res.status(201).json({ success: true, message: "User registered successfully", data: user });
   } catch (error: any) {
     res
       .status(500)
@@ -56,7 +56,7 @@ const loginUser = async (req: Request, res: Response<LoginResponse>) => {
 
     tokens[user.id] = refreshToken;
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       message: "Login successful",
       data: {
