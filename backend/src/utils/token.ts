@@ -7,10 +7,10 @@ const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET || 'your_access_toke
 const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET || 'your_refresh_token_secret';
 
 const generateAccessToken = (userId: string) =>
-  jwt.sign({ userId, type: 'access' }, ACCESS_TOKEN_SECRET, { expiresIn: '15m' });
+  jwt.sign({ id:userId, type: 'access' }, ACCESS_TOKEN_SECRET, { expiresIn: '15m' });
 
 const generateRefreshToken = (userId: string) =>
-  jwt.sign({ userId, type: 'refresh' }, REFRESH_TOKEN_SECRET, { expiresIn: '7d' });
+  jwt.sign({  id:userId, type: 'refresh' }, REFRESH_TOKEN_SECRET, { expiresIn: '7d' });
 
 
 const verifyAccessToken = (token: string) => {

@@ -64,7 +64,7 @@ export async function createGameService(
   }
 }
 
-export async function JoinRoomAsPlayer(req: Request, res: Response) {
+export async function JoinGameAsPlayer(req: Request, res: Response) {
   try {
     const { gameId } = req.params;
     const { status } = req.body;

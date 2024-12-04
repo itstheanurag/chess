@@ -4,6 +4,7 @@ import { CreateGameSchemaWithRequiredFields } from "src/schemas";
 
 export async function createGame(data: CreateGameSchemaWithRequiredFields) {
   try {
+    console.log("CREATING THE GAME ", data)
     const game = await prisma.$transaction(async (tx) => {
       const createdGame = await tx.game.create({ data });
       await tx.player.create({

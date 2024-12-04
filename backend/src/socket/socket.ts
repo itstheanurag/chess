@@ -26,13 +26,27 @@ export const handleSocketConnections = (io: Server) => {
 };
 
 export const handleAuthorizedSockets = (userSocket: Socket) => {
-  userSocket.on(GameEvents.JOIN_ROOM, (data) => {
-    console.log(`Authorized user ${userSocket.data.user?.id} joined room: ${data.roomId}`);
+  userSocket.on(GameEvents.PLAYER_JOINED, (data) => {
+    console.log(`Authorized user ${userSocket.data.user?.id} joined room: ${data}`);
   });
+
+  userSocket.on(GameEvents.PLAYER_LEFT, (data) => {
+    console.log(`Authorized user ${userSocket.data.user?.id} joined room: ${data}`);
+  });
+
+  userSocket.on(GameEvents.MAKE_MOVE, (data) => {
+
+  })
 
 };
 
 export const handleUnauthorizedSockets = (unauthorizedUserSocket: Socket) => {
-  console.log('Unauthorized user connected');
-  unauthorizedUserSocket.disconnect(); 
+  unauthorizedUserSocket.on(GameEvents.SPECTATOR_JOINED, () => {
+
+  });
+
+  unauthorizedUserSocket.on(GameEvents.SPECTATOR_LEFT, () => {
+
+  });
+  
 };

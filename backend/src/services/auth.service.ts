@@ -1,5 +1,4 @@
 import {Response, Request} from 'express';
-import { prisma } from '../db';
 import { createUser, findUser } from '../repositories';
 import { AccessToken, LoginResponse, UserCreatedResponse } from 'src/types';
 import { 
@@ -9,8 +8,7 @@ import {
   hashPassword, 
   verifyRefreshToken 
 } from 'src/utils';
-
-const tokens: Record<string, string> = {};
+import { accessTokenCache, refreshTokenCache } from 'src/cache';
 
 const registerUser = async (req: Request, res: Response<UserCreatedResponse>) => {
   try {
@@ -48,7 +46,8 @@ const loginUser = async (req: Request, res: Response<LoginResponse>) => {
     const accessToken = generateAccessToken(user.id);
     const refreshToken = generateRefreshToken(user.id);
 
-    tokens[user.id] = refreshToken;
+    accessTokenCache.set(accessToken, user.id, 3600);  
+    refreshTokenCache.set(refreshToken, user.id, 86400); 
 
     return res.status(200).json({
       success: true,
@@ -66,18 +65,8 @@ const loginUser = async (req: Request, res: Response<LoginResponse>) => {
 
 const reLoginUser = async(req: Request, res: Response<AccessToken>) =>{
   const { refreshToken } = req.body;
-
-  if (!refreshToken) {
-    return res.status(400).json({ message: "Refresh token is required" });
-  }
-
   try {
-    const decoded = verifyRefreshToken(refreshToken); 
-
-    if (tokens[decoded.id] !== refreshToken) { 
-      return res.status(403).json({ message: "Invalid refresh token" });
-    }
-
+    const decoded = verifyRefreshToken(refreshToken);
     const accessToken = generateAccessToken(decoded.id);
 
     return res.status(200).json({

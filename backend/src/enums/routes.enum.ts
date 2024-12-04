@@ -5,8 +5,8 @@ export enum AuthRoutesEnums {
 }
 
 export enum GameRoutesEnums {
-    GET_ALL_ROOMS = '/api/v1/games',               
-    CREATE_ROOM = '/api/v1/games/create',          
-    GET_ROOM_DETAILS = '/api/v1/games/:roomId',    
-    JOIN_ROOM = '/api/v1/games/:gameId/join',    
+    GET_ALL_GAMES = '/api/v1/games',               
+    CREATE_GAME = '/api/v1/games',          
+    GET_GAME_DETAILS = '/api/v1/games/:gameId',    
+    JOIN_GAME = '/api/v1/games/:gameId/join',    
 }

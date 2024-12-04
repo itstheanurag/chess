@@ -1,7 +1,7 @@
 import express, { Request, Response } from "express";
 import { loginUser, registerUser, reLoginUser } from "../services/auth.service";
 import { AccessToken, LoginResponse, UserCreatedResponse } from "src/types";
-import { GlobalRequestValidator } from "@middlewares/index";
+import { GlobalRequestValidator, refreshTokenGuard } from "@middlewares/index";
 import { CreateUserShema } from "src/schemas/index";
 import { AuthRoutesEnums } from "@enums/index";
 
@@ -27,9 +27,11 @@ const authRouter = express.Router();
  *               username:
  *                 type: string
  *                 description: The username of the user
+ *                 example: tester
  *               password:
  *                 type: string
  *                 description: The password of the user
+ *                 example: Password@123
  *     responses:
  *       201:
  *         description: User successfully created
@@ -105,6 +107,6 @@ const reLoginUserHandler = async (req: Request, res: Response<AccessToken>) => {
 
 authRouter.post(AuthRoutesEnums.REGISTER, GlobalRequestValidator({ body: CreateUserShema }), registerUserHandler);
 authRouter.post(AuthRoutesEnums.LOGIN, loginUserHandler);
-authRouter.post(AuthRoutesEnums.REFRESH_TOKEN_LOGIN, reLoginUserHandler);
+authRouter.post(AuthRoutesEnums.REFRESH_TOKEN_LOGIN, refreshTokenGuard, reLoginUserHandler);
 
 export { authRouter };
