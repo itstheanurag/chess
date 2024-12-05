@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { toast } from "react-toastify";
-import { loginUser, registerUser } from "../utils/http";
+import { loginUser, registerUser } from "../../utils/http";
 
 const Auth: React.FC = () => {
   const [isLogin, setIsLogin] = useState(true);
