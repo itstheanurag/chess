@@ -1,16 +1,16 @@
 import jwt from 'jsonwebtoken';
+import { 
+  ACCESS_TOKEN_EXPIRE_TIME, 
+  ACCESS_TOKEN_SECRET, 
+  REFRESH_TOKEN_EXPIRE_TIME, 
+  REFRESH_TOKEN_SECRET 
+} from 'src/config';
 import { UserType } from 'src/types';
-
-
-// node -e "console.log(require('crypto').createHash('sha256').update(require('crypto').randomBytes(32)).digest('hex'))"
-const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET || 'your_access_token_secret';
-const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET || 'your_refresh_token_secret';
-
 const generateAccessToken = (userId: string) =>
-  jwt.sign({ id:userId, type: 'access' }, ACCESS_TOKEN_SECRET, { expiresIn: '15m' });
+  jwt.sign({ id:userId, type: 'access' }, ACCESS_TOKEN_SECRET, { expiresIn: ACCESS_TOKEN_EXPIRE_TIME });
 
 const generateRefreshToken = (userId: string) =>
-  jwt.sign({  id:userId, type: 'refresh' }, REFRESH_TOKEN_SECRET, { expiresIn: '7d' });
+  jwt.sign({  id:userId, type: 'refresh' }, REFRESH_TOKEN_SECRET, { expiresIn: REFRESH_TOKEN_EXPIRE_TIME });
 
 
 const verifyAccessToken = (token: string) => {

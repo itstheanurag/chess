@@ -9,6 +9,7 @@ import {
   verifyRefreshToken 
 } from 'src/utils';
 import { accessTokenCache, refreshTokenCache } from 'src/cache';
+import { ACCESS_TOKEN_EXPIRE_TIME, REFRESH_TOKEN_EXPIRE_TIME } from 'src/config';
 
 const registerUser = async (req: Request, res: Response<UserCreatedResponse>) => {
   try {
@@ -46,8 +47,8 @@ const loginUser = async (req: Request, res: Response<LoginResponse>) => {
     const accessToken = generateAccessToken(user.id);
     const refreshToken = generateRefreshToken(user.id);
 
-    accessTokenCache.set(accessToken, user.id, 3600);  
-    refreshTokenCache.set(refreshToken, user.id, 86400); 
+    accessTokenCache.set(accessToken, user.id, ACCESS_TOKEN_EXPIRE_TIME);  
+    refreshTokenCache.set(refreshToken, user.id, REFRESH_TOKEN_EXPIRE_TIME); 
 
     return res.status(200).json({
       success: true,

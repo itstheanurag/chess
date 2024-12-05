@@ -1,5 +1,5 @@
-import { prisma } from "src/db";
 import { CreateUserDto } from "src/schemas";
+import { prisma } from "..";
 
 export async function findUser(username: string) {
     return await prisma.user.findUnique({ where: { username } });

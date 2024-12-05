@@ -5,8 +5,8 @@ import { handleSocketConnections } from './socket/socket';
 import * as Routers from './routes';
 import { setupSwagger } from './swagger/swagger';
 import cors from 'cors';
-
-
+import dotenv from 'dotenv';
+import { PrismaClient } from '@prisma/client';
 
 const app = express();
 const PORT = 3000;
@@ -37,3 +37,7 @@ handleSocketConnections(io)
 httpServer.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);
 });
+
+// db configuration
+export const prisma = new PrismaClient();
+// console.log(prisma)

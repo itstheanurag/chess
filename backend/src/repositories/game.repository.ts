@@ -1,6 +1,6 @@
 import { GameStatus, GameType } from "@enums/game.enums";
-import { prisma } from "src/db";
 import { CreateGameSchemaWithRequiredFields } from "src/schemas";
+import { prisma } from "..";
 
 export async function createGame(data: CreateGameSchemaWithRequiredFields) {
   try {

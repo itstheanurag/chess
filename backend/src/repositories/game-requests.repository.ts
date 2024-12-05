@@ -1,6 +1,6 @@
 import { GameRequestStatusEnum } from '@enums/index';
-import { prisma } from 'src/db';
 import { CreateGameRequestDto } from 'src/schemas';
+import { prisma } from '..';
 
 // create a game request
 export async function createGameRequest(data: CreateGameRequestDto) {
