@@ -1,41 +1,40 @@
 import React from "react";
+import {
+  FaChessPawn,
+  FaChessRook,
+  FaChessKnight,
+  FaChessBishop,
+  FaChessQueen,
+  FaChessKing,
+} from "react-icons/fa";
+import type { PieceColor, PieceType } from "@/types/chess";
 
 export interface PieceProps {
-  type: "pawn" | "rook" | "knight" | "bishop" | "queen" | "king";
-  color: "white" | "black";
+  type: PieceType;
+  color: PieceColor;
 }
 
-const unicodePieces: Record<
-  PieceProps["color"],
-  Record<PieceProps["type"], string>
-> = {
-  white: {
-    pawn: "♙",
-    rook: "♖",
-    knight: "♘",
-    bishop: "♗",
-    queen: "♕",
-    king: "♔",
-  },
-  black: {
-    pawn: "♟︎",
-    rook: "♜",
-    knight: "♞",
-    bishop: "♝",
-    queen: "♛",
-    king: "♚",
-  },
+// Map piece types to React Icon components
+const pieceIcons: Record<PieceProps["type"], React.ReactNode> = {
+  pawn: <FaChessPawn />,
+  rook: <FaChessRook />,
+  knight: <FaChessKnight />,
+  bishop: <FaChessBishop />,
+  queen: <FaChessQueen />,
+  king: <FaChessKing />,
 };
 
 const Piece: React.FC<PieceProps> = ({ type, color }) => {
-  const pieceUnicode = unicodePieces[color][type];
+  const Icon = pieceIcons[type] as React.ReactElement;
   return (
     <div
-      className={`text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl ${
-        color === "white" ? "text-shadow-blue-100" : "text-black"
-      } shadow-2xs`}
+      className={`text-2xl sm:text-3xl md:text-4xl lg:text-5xl ${
+        color === "white"
+          ? "text-neutral-400  drop-shadow-lg"
+          : "text-black drop-shadow-lg"
+      }`}
     >
-      {pieceUnicode}
+      {Icon}
     </div>
   );
 };

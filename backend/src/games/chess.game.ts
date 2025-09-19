@@ -1,51 +1,5 @@
-import { Chess, Move, Square, Piece, PieceSymbol, Color } from 'chess.js';
-
-type GameStatus = 'active' | 'checkmate' | 'draw' | 'stalemate' | 'threefold' | 'insufficient' | '50move';
-
-interface GameMoveResult extends Move {
-  success: boolean;
-  error?: string;
-  fen: string;
-  pgn: string;
-  status: GameStatus;
-  turn: Color;
-  inCheck: boolean;
-  inCheckmate: boolean;
-  inDraw: boolean;
-  inStalemate: boolean;
-  insufficientMaterial: boolean;
-  inThreefoldRepetition: boolean;
-  // Add missing methods from Move interface
-  isCapture(): boolean;
-  isPromotion(): boolean;
-  isEnPassant(): boolean;
-  isKingsideCastle(): boolean;
-  isQueensideCastle(): boolean;
-  isBigPawn(): boolean;
-}
-
-interface GameState {
-  fen: string;
-  pgn: string;
-  turn: Color;
-  gameOver: boolean;
-  status: GameStatus;
-  board: ({
-    square: string;
-    type: PieceSymbol;
-    color: Color;
-  } | null)[][];
-  inCheck: boolean;
-  inCheckmate: boolean;
-  inDraw: boolean;
-  inStalemate: boolean;
-  insufficientMaterial: boolean;
-  inThreefoldRepetition: boolean;
-  moveHistory: Move[];
-  whitePlayer?: string;
-  blackPlayer?: string;
-  spectators: string[];
-}
+import { GameState, GameStatus, GameMoveResult } from "@/types";
+import { Chess, Move, Square, Piece, PieceSymbol, Color } from "chess.js";
 
 export class ChessGame extends Chess {
   private gameHistory: string[] = [];
@@ -69,12 +23,12 @@ export class ChessGame extends Chess {
   public joinPlayer(playerName: string): Color {
     if (!this.players.white) {
       this.players.white = playerName;
-      return 'w';
+      return "w";
     } else if (!this.players.black) {
       this.players.black = playerName;
-      return 'b';
+      return "b";
     }
-    throw new Error('Game is full');
+    throw new Error("Game is full");
   }
 
   /**
@@ -103,7 +57,9 @@ export class ChessGame extends Chess {
    * Check if the game is empty (no players or spectators)
    */
   public isEmpty(): boolean {
-    return !this.players.white && !this.players.black && this.spectators.size === 0;
+    return (
+      !this.players.white && !this.players.black && this.spectators.size === 0
+    );
   }
 
   /**
@@ -126,7 +82,7 @@ export class ChessGame extends Chess {
       moveHistory: this.history({ verbose: true }),
       whitePlayer: this.players.white,
       blackPlayer: this.players.black,
-      spectators: Array.from(this.spectators)
+      spectators: Array.from(this.spectators),
     };
   }
 
@@ -134,14 +90,14 @@ export class ChessGame extends Chess {
    * Get the current game status
    */
   public getStatus(): GameStatus {
-    if (this.isCheckmate()) return 'checkmate';
+    if (this.isCheckmate()) return "checkmate";
     if (this.isDraw()) {
-      if (this.isInsufficientMaterial()) return 'insufficient';
-      if (this.isThreefoldRepetition()) return 'threefold';
-      if (this.isStalemate()) return 'stalemate';
-      return 'draw';
+      if (this.isInsufficientMaterial()) return "insufficient";
+      if (this.isThreefoldRepetition()) return "threefold";
+      if (this.isStalemate()) return "stalemate";
+      return "draw";
     }
-    return 'active';
+    return "active";
   }
 
   /**
@@ -149,11 +105,13 @@ export class ChessGame extends Chess {
    * @param move - Move in SAN or UCI format
    * @returns Object containing move result and game state
    */
-  public makeMove(move: string | { from: string; to: string; promotion?: string }): GameMoveResult {
+  public makeMove(
+    move: string | { from: string; to: string; promotion?: string }
+  ): GameMoveResult {
     try {
       const result = super.move(move);
       this.gameHistory.push(this.fen());
-      
+
       // Create a new object that includes all Move methods and our custom properties
       const moveResult: GameMoveResult = {
         ...result,
@@ -174,22 +132,22 @@ export class ChessGame extends Chess {
         isEnPassant: () => result.isEnPassant(),
         isKingsideCastle: () => result.isKingsideCastle(),
         isQueensideCastle: () => result.isQueensideCastle(),
-        isBigPawn: () => result.isBigPawn()
+        isBigPawn: () => result.isBigPawn(),
       };
-      
+
       return moveResult;
     } catch (error) {
       // For invalid moves, we'll create a minimal valid Move object
       const dummyMove = {
-        color: (this.turn() === 'w' ? 'b' : 'w') as Color,
-        from: 'a1' as Square,
-        to: 'a1' as Square,
-        piece: 'p' as PieceSymbol,
-        san: '',
-        lan: '',
+        color: (this.turn() === "w" ? "b" : "w") as Color,
+        from: "a1" as Square,
+        to: "a1" as Square,
+        piece: "p" as PieceSymbol,
+        san: "",
+        lan: "",
         before: this.fen(),
         after: this.fen(),
-        flags: '',
+        flags: "",
         captured: undefined,
         promotion: undefined,
         isCapture: () => false,
@@ -199,11 +157,11 @@ export class ChessGame extends Chess {
         isQueensideCastle: () => false,
         isBigPawn: () => false,
       };
-      
+
       return {
         ...dummyMove,
         success: false,
-        error: error instanceof Error ? error.message : 'Invalid move',
+        error: error instanceof Error ? error.message : "Invalid move",
         fen: this.fen(),
         pgn: this.pgn(),
         status: this.getGameStatus(),
@@ -244,14 +202,14 @@ export class ChessGame extends Chess {
    * @returns Current game status
    */
   public getGameStatus(): GameStatus {
-    if (this.isCheckmate()) return 'checkmate';
+    if (this.isCheckmate()) return "checkmate";
     if (this.isDraw()) {
-      if (this.isStalemate()) return 'stalemate';
-      if (this.isThreefoldRepetition()) return 'threefold';
-      if (this.isInsufficientMaterial()) return 'insufficient';
-      if (this.isDraw()) return 'draw';
+      if (this.isStalemate()) return "stalemate";
+      if (this.isThreefoldRepetition()) return "threefold";
+      if (this.isInsufficientMaterial()) return "insufficient";
+      if (this.isDraw()) return "draw";
     }
-    return 'active';
+    return "active";
   }
 
   /**

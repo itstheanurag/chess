@@ -11,7 +11,7 @@ const Square: React.FC<SquareProps> = ({ piece, isLight }) => {
   return (
     <div
       className={`aspect-square w-full flex items-center justify-center ${
-        isLight ? "bg-gray-200" : "bg-gray-600"
+        isLight ? "bg-neutral-50" : "bg-gray-700"
       }`}
     >
       {piece && <Piece type={piece.type} color={piece.color} />}

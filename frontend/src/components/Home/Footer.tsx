@@ -4,10 +4,8 @@ import { FaGithub, FaChessKnight } from "react-icons/fa";
 const Footer: React.FC = () => {
   return (
     <footer className="w-full relative bg-neutral-900 text-neutral-300">
-
       {/* Content */}
       <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
-        {/* Logo / Branding */}
         <div className="flex items-center gap-2 text-lg font-semibold tracking-wide pt-10">
           <FaChessKnight className="text-white text-2xl" />
           <span className="text-white">ChessHub</span>

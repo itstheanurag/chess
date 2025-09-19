@@ -1,7 +1,7 @@
-import { Socket } from 'socket.io';
-import jwt from 'jsonwebtoken';
-import type { JwtPayload } from 'jsonwebtoken';
-import { config } from '../config/config';
+import { Socket } from "socket.io";
+import jwt from "jsonwebtoken";
+import type { JwtPayload } from "jsonwebtoken";
+import { config } from "@/config/config";
 
 // Extend the Socket interface to include the user property
 declare module "socket.io" {
@@ -20,12 +20,14 @@ export const socketAuthGuard = (isAuthRequired: boolean = true) => {
     try {
       // Get token from handshake auth or headers
       const authHeader = socket.handshake.headers.authorization;
-      const token = authHeader?.split(' ')[1] || socket.handshake.auth.token;
+      const token = authHeader?.split(" ")[1] || socket.handshake.auth.token;
 
       // If no token and auth is required, return error
       if (!token && isAuthRequired) {
-        console.warn('Socket connection rejected: No authentication token provided');
-        return next(new Error('Authentication error: No token provided'));
+        console.warn(
+          "Socket connection rejected: No authentication token provided"
+        );
+        return next(new Error("Authentication error: No token provided"));
       }
 
       // If no token but auth is not required, continue
@@ -36,26 +38,26 @@ export const socketAuthGuard = (isAuthRequired: boolean = true) => {
       try {
         // Verify token
         const decoded = jwt.verify(token, config.jwt.secret) as JwtPayload;
-        
+
         // Attach user to socket for later use
         socket.user = decoded;
-        
+
         // Continue to the next middleware
         next();
       } catch (error) {
-        console.error('Socket authentication error:', error);
-        
+        console.error("Socket authentication error:", error);
+
         // If auth is required, reject the connection
         if (isAuthRequired) {
-          return next(new Error('Authentication error: Invalid token'));
+          return next(new Error("Authentication error: Invalid token"));
         }
-        
+
         // If auth is not required, continue
         next();
       }
     } catch (error) {
-      console.error('Error in socket authentication middleware:', error);
-      return next(new Error('Internal server error during authentication'));
+      console.error("Error in socket authentication middleware:", error);
+      return next(new Error("Internal server error during authentication"));
     }
   };
-}
+};

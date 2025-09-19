@@ -1,12 +1,12 @@
 import express, { Request, Response, NextFunction } from "express";
 import http from "http";
 import { Server } from "socket.io";
-import { initializeSocket } from "./socket/socket";
-import { socketAuthGuard } from "./middlewares";
+import { socketAuthGuard } from "@/middlewares";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
-import routes from "./routes/index";
+import routes from "@/routes";
+import { initializeSocket } from "./socket";
 
 dotenv.config();
 

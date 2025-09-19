@@ -1,9 +1,6 @@
 // chessUtils.ts
-import { Chess } from "chess.js";
-import type { PieceSymbol } from "chess.js";
-
-type PieceType = "pawn" | "rook" | "knight" | "bishop" | "queen" | "king";
-type PieceColor = "white" | "black";
+import { PieceType, PieceColor } from "@/types/chess";
+import { Chess, PieceSymbol } from "chess.js";
 
 export interface Piece {
   type: PieceType;
@@ -12,7 +9,7 @@ export interface Piece {
 
 export const getInitialBoard = (): (Piece | null)[][] => {
   const chess = new Chess();
-  const rawBoard = chess.board(); // 8x8 array from chess.js
+  const rawBoard = chess.board();
 
   return rawBoard.map((row) =>
     row.map((piece) =>
