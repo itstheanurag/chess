@@ -6,7 +6,7 @@ import { socketAuthGuard } from "./middlewares";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
-import routes from './routes/index'
+import routes from "./routes/index";
 
 dotenv.config();
 
@@ -30,21 +30,25 @@ app.use(cors(corsOptions));
 
 // Request logging middleware
 app.use((req: Request, _res: Response, next: NextFunction) => {
-  console.log(`${Date.now()} - ${req.method} ${req.path} ${req.ip} ${req.headers['user-agent']}`);
+  console.log(
+    `${Date.now()} - ${req.method} ${req.path} ${req.ip} ${
+      req.headers["user-agent"]
+    }`
+  );
   next();
 });
 
 // Health check endpoint
-app.get('/health', (_req: Request, res: Response) => {
-  res.status(200).json({ 
-    status: 'ok', 
-    service: 'chess-api',
+app.get("/health", (_req: Request, res: Response) => {
+  res.status(200).json({
+    status: "ok",
+    service: "chess-api",
     timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || 'development'
+    environment: process.env.NODE_ENV || "development",
   });
 });
 
-app.use(routes)
+app.use(routes);
 
 // Initialize Socket.IO with CORS configuration
 const io = new Server(server, {
@@ -56,29 +60,32 @@ const io = new Server(server, {
 
 // Initialize namespaces
 const namespaces = {
-  game: io.of('/game'),
-  chat: io.of('/chat')
+  game: io.of("/game"),
+  chat: io.of("/chat"),
 };
 
 // Apply authentication to namespaces
 Object.entries(namespaces).forEach(([namespace, nsp]) => {
   // Game namespace requires auth, chat is optional
-  const requiresAuth = namespace === 'game';
+  const requiresAuth = namespace === "game";
   nsp.use(socketAuthGuard(requiresAuth));
-  
+
   // Initialize socket for this namespace
-  initializeSocket(nsp, namespace as 'game' | 'chat');
-  
-  nsp.on('connection', (socket) => {
+  initializeSocket(nsp, namespace as "game" | "chat");
+
+  nsp.on("connection", (socket) => {
     console.log(`Client connected to ${namespace} namespace:`, socket.id);
-    
+
     // Handle disconnection
-    socket.on('disconnect', (reason) => {
-      console.log(`Client disconnected from ${namespace} (${reason}):`, socket.id);
+    socket.on("disconnect", (reason) => {
+      console.log(
+        `Client disconnected from ${namespace} (${reason}):`,
+        socket.id
+      );
     });
-    
+
     // Handle errors
-    socket.on('error', (error) => {
+    socket.on("error", (error) => {
       console.error(`Socket error in ${namespace}:`, error);
     });
   });
@@ -86,11 +93,11 @@ Object.entries(namespaces).forEach(([namespace, nsp]) => {
 
 // Error handling middleware
 app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
-  console.error('Error:', err);
+  console.error("Error:", err);
   res.status(500).json({
     success: false,
-    message: 'Internal server error',
-    error: process.env.NODE_ENV === 'development' ? err.message : undefined,
+    message: "Internal server error",
+    error: process.env.NODE_ENV === "development" ? err.message : undefined,
   });
 });
 
@@ -98,7 +105,7 @@ app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
 app.use((_req: Request, res: Response) => {
   res.status(404).json({
     success: false,
-    message: 'Resource not found',
+    message: "Resource not found",
     path: _req.path,
     method: _req.method,
   });
@@ -109,26 +116,28 @@ const startServer = async () => {
   try {
     // Ensure we're not already listening
     if (server.listening) {
-      console.log('Server is already running');
+      console.log("Server is already running");
       return;
     }
-    
+
     const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 4000;
     server.listen(PORT, () => {
       const address = server.address();
-      const actualPort = typeof address === 'string' ? PORT : address?.port || PORT;
-      
-      console.log('\n🚀 Server started successfully!');
-      console.log('='.repeat(50));
-      console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
+      const actualPort =
+        typeof address === "string" ? PORT : address?.port || PORT;
+
+      console.log("\n🚀 Server started successfully!");
+      console.log("=".repeat(50));
+      console.log(`🌐 Environment: ${process.env.NODE_ENV || "development"}`);
       console.log(`🔌 API URL: http://localhost:${actualPort}/api`);
       console.log(`🩺 Health check: http://localhost:${actualPort}/health`);
       console.log(`🔌 WebSocket URL: ws://localhost:${actualPort}`);
-      console.log('='.repeat(50) + '\n');
+      console.log("=".repeat(50) + "\n");
     });
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    console.error('❌ Failed to start server:', errorMessage);
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+    console.error("❌ Failed to start server:", errorMessage);
     process.exit(1);
   }
 };
@@ -137,34 +146,36 @@ const startServer = async () => {
 startServer();
 
 // Handle unhandled promise rejections
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('❌ Unhandled Rejection at:', promise, '\nReason:', reason);
+process.on("unhandledRejection", (reason, promise) => {
+  console.error("❌ Unhandled Rejection at:", promise, "\nReason:", reason);
 });
 
 // Handle uncaught exceptions
-process.on('uncaughtException', (error) => {
-  console.error('❌ Uncaught Exception:', error);
+process.on("uncaughtException", (error) => {
+  console.error("❌ Uncaught Exception:", error);
   process.exit(1);
 });
 
 // Handle process termination signals
 const shutdown = (signal: string) => {
   console.log(`\n${signal} received. Shutting down gracefully...`);
-  
+
   // Close the HTTP server
   server.close(() => {
-    console.log('HTTP server closed');
-    console.log('Process terminated');
+    console.log("HTTP server closed");
+    console.log("Process terminated");
     process.exit(0);
   });
 
   // Force shutdown after 10 seconds
   setTimeout(() => {
-    console.error('Could not close connections in time, forcefully shutting down');
+    console.error(
+      "Could not close connections in time, forcefully shutting down"
+    );
     process.exit(1);
   }, 10000);
 };
 
 // Handle different termination signals
-process.on('SIGTERM', () => shutdown('SIGTERM'));
-process.on('SIGINT', () => shutdown('SIGINT'));
+process.on("SIGTERM", () => shutdown("SIGTERM"));
+process.on("SIGINT", () => shutdown("SIGINT"));
