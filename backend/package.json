@@ -16,6 +16,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@prisma/client": "^6.16.2",
     "@types/chess.js": "^0.13.7",
     "@types/cookie-parser": "^1.4.8",
     "@types/cors": "^2.8.18",
@@ -38,6 +39,7 @@
     "@types/node": "^20.12.7",
     "@types/socket.io": "^3.0.2",
     "nodemon": "^3.1.10",
+    "prisma": "^6.16.2",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
     "tslib": "^2.6.2",
