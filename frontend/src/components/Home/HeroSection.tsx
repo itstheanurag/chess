@@ -33,7 +33,10 @@ const HeroSection: React.FC = () => {
           Challenge friends or train against the computer. Smooth, elegant
           gameplay anytime.
         </p>
-        <button className="px-6 py-3 bg-white text-neutral-900 rounded-2xl font-semibold hover:bg-neutral-200 transition-colors">
+        <button
+          onClick={() => console.log("Button Clicked")}
+          className="px-6 py-3 bg-white text-neutral-900 rounded-2xl font-semibold hover:bg-neutral-200 transition-colors"
+        >
           Get Started
         </button>
       </div>

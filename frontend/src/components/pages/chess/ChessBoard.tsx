@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useEffect } from "react";
 import Square from "./Square";
 import type { PieceType, PieceColor } from "@/types/chess";
+import { useSockets } from "@/Contexts/SocketContext";
 
 interface Piece {
   type: PieceType;
@@ -12,6 +13,18 @@ type ChessBoardProps = {
 };
 
 const ChessBoard: React.FC<ChessBoardProps> = ({ board }) => {
+  const { game } = useSockets();
+
+  useEffect(() => {
+    game.on("game:update", (data: any) => {
+      console.log("Game update:", data);
+    });
+
+    return () => {
+      game.off("game:update");
+    };
+  }, [game]);
+
   return (
     <div className="flex items-center justify-center w-full h-screen bg-neutral-900">
       <div className="grid grid-cols-8 aspect-square w-full max-w-[90vmin] sm:max-w-[80vmin] md:max-w-[60vmin] lg:max-w-[500px] border-4 border-gray-800">

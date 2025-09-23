@@ -19,8 +19,8 @@ export const socketAuthGuard = (isAuthRequired: boolean = true) => {
   return (socket: Socket, next: (err?: Error) => void) => {
     try {
       // Get token from handshake auth or headers
-      const authHeader = socket.handshake.headers.authorization;
-      const token = authHeader?.split(" ")[1] || socket.handshake.auth.token;
+      const authHeader = socket.handshake.headers?.authorization;
+      const token = authHeader?.split(" ")[1] || socket.handshake?.auth?.token;
 
       // If no token and auth is required, return error
       if (!token && isAuthRequired) {
@@ -38,8 +38,6 @@ export const socketAuthGuard = (isAuthRequired: boolean = true) => {
       try {
         // Verify token
         const decoded = jwt.verify(token, config.jwt.secret) as JwtPayload;
-
-        // Attach user to socket for later use
         socket.user = decoded;
 
         // Continue to the next middleware
@@ -47,7 +45,6 @@ export const socketAuthGuard = (isAuthRequired: boolean = true) => {
       } catch (error) {
         console.error("Socket authentication error:", error);
 
-        // If auth is required, reject the connection
         if (isAuthRequired) {
           return next(new Error("Authentication error: Invalid token"));
         }
