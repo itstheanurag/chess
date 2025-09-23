@@ -1,8 +1,12 @@
-import { allowedHeaders, allowedMethods, allowedOrigins } from "@/config/cors";
+import {
+  allowedOrigins,
+  allowedMethods,
+  allowedHeaders,
+} from "@/config/config";
 import cors, { CorsOptions } from "cors";
 
 const corsOptions: CorsOptions = {
-  origin: (origin, callback) => {   
+  origin: (origin, callback) => {
     if (!origin || allowedOrigins.includes(origin!)) {
       callback(null, true);
     } else {

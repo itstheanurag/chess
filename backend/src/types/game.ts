@@ -6,7 +6,12 @@ export interface JoinGameData {
 
 export interface MoveData {
   room: string;
-  move: string | { from: string; to: string; promotion?: string };
+  move: {
+    from: string;
+    to: string;
+    promotion?: "q" | "r" | "b" | "n";
+  };
+  playerName: string;
 }
 
 export interface ChatMessage {

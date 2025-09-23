@@ -3,11 +3,11 @@ import { Server as IOServer, Namespace } from "socket.io";
 import { initializeGameNamespace } from "./game.socket";
 import { initializeChatNamespace } from "./chat.socket";
 import { socketAuthGuard } from "@/middlewares";
-import { corsOptions } from "@/config/cors";
+import { config } from "@/config/config";
 
 export const startSocketServer = (server: HttpServer) => {
   const io = new IOServer(server, {
-    cors: corsOptions,
+    cors: config.cors,
     path: "/socket.io/",
     serveClient: false,
     connectTimeout: 10000,
@@ -19,8 +19,8 @@ export const startSocketServer = (server: HttpServer) => {
   };
 
   Object.entries(namespaces).forEach(([name, nsp]) => {
-    const requiresAuth = name === "game";
-    nsp.use(socketAuthGuard(requiresAuth));
+    // const requiresAuth = name === "game";
+    // nsp.use(socketAuthGuard(requiresAuth));
 
     if (name === "game") initializeGameNamespace(nsp);
     if (name === "chat") initializeChatNamespace(nsp);

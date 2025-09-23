@@ -1,10 +1,39 @@
 import dotenv from "dotenv";
-
 dotenv.config();
 
-/**
- * Application configuration
- */
+export const allowedOrigins: string[] = (process.env.CORS_ORIGINS ?? "")
+  .split(",")
+  .map((o) => o.trim())
+  .filter((o) => o.length > 0);
+
+export const allowedMethods: string[] = (process.env.CORS_METHODS ?? "")
+  .split(",")
+  .map((m) => m.trim())
+  .filter((m) => m.length > 0);
+
+export const allowedHeaders: string[] = (process.env.CORS_HEADERS ?? "")
+  .split(",")
+  .map((h) => h.trim())
+  .filter((h) => h.length > 0);
+
+if (
+  !allowedOrigins.length ||
+  !allowedMethods.length ||
+  !allowedHeaders.length
+) {
+  console.error("❌ Missing or invalid CORS configuration in .env");
+  process.exit(1);
+}
+
+export const corsOptions = {
+  origin: allowedOrigins,
+  methods: allowedMethods,
+  allowedHeaders: allowedHeaders,
+  credentials: true,
+};
+
+console.log("✅ CORS configuration loaded:", corsOptions);
+
 export const config = {
   // Server configuration
   server: {
@@ -26,19 +55,16 @@ export const config = {
 
   // CORS configuration
   cors: {
-    origin: process.env.FRONTEND_URL?.split(",") || ["http://localhost:3000"],
-    credentials: true,
+    ...corsOptions,
   },
 
-  // WebSocket configuration
   websocket: {
-    pingTimeout: 60000, // 60 seconds
-    pingInterval: 25000, // 25 seconds
-    maxHttpBufferSize: 1e8, // 100MB
+    pingTimeout: 60000,
+    pingInterval: 25000,
+    maxHttpBufferSize: 1e8,
   },
 } as const;
 
-// Export individual configs for backward compatibility
 export const { JWT_SECRET, GAME_JWT_SECRET, TOKEN_EXPIRES_IN, FRONTEND_URL } = {
   JWT_SECRET: config.jwt.secret,
   GAME_JWT_SECRET: config.jwt.gameSecret,

@@ -4,7 +4,7 @@ import {
   getGame,
   makeMove,
   getValidMoves,
-} from "@/controllers/game.controller";
+} from "@/handler/game.handler";
 import { authGuard } from "@/middlewares/auth.guard";
 
 const GameRouter: Router = Router();
