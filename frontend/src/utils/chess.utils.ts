@@ -1,11 +1,6 @@
 // chessUtils.ts
-import { PieceType, PieceColor } from "@/types/chess";
+import { PieceType, Piece } from "@/types/chess";
 import { Chess, PieceSymbol } from "chess.js";
-
-export interface Piece {
-  type: PieceType;
-  color: PieceColor;
-}
 
 export const getInitialBoard = (): (Piece | null)[][] => {
   const chess = new Chess();
