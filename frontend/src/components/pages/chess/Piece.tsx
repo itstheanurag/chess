@@ -7,34 +7,28 @@ import {
   FaChessQueen,
   FaChessKing,
 } from "react-icons/fa";
-import type { PieceColor, PieceType } from "@/types/chess";
+import type { PieceColor, PieceProps, PieceType } from "@/types/chess";
 
-export interface PieceProps {
-  type: PieceType;
-  color: PieceColor;
-}
-
-// Map piece types to React Icon components
-const pieceIcons: Record<PieceProps["type"], React.ReactNode> = {
-  pawn: <FaChessPawn />,
-  rook: <FaChessRook />,
-  knight: <FaChessKnight />,
-  bishop: <FaChessBishop />,
-  queen: <FaChessQueen />,
-  king: <FaChessKing />,
+const pieceIcons: Record<PieceType, React.ComponentType> = {
+  pawn: FaChessPawn,
+  rook: FaChessRook,
+  knight: FaChessKnight,
+  bishop: FaChessBishop,
+  queen: FaChessQueen,
+  king: FaChessKing,
 };
 
 const Piece: React.FC<PieceProps> = ({ type, color }) => {
-  const Icon = pieceIcons[type] as React.ReactElement;
+  const Icon = pieceIcons[type];
   return (
     <div
       className={`text-2xl sm:text-3xl md:text-4xl lg:text-5xl ${
         color === "white"
-          ? "text-neutral-400  drop-shadow-lg"
-          : "text-black drop-shadow-lg"
+          ? "text-neutral-400 drop-shadow-lg shadow-white"
+          : "text-neutral-900 drop-shadow-lg"
       }`}
     >
-      {Icon}
+      <Icon />
     </div>
   );
 };

@@ -1,9 +1,10 @@
-import React, { useEffect } from "react";
-import Square from "./Square";
+import React, { useEffect, useState } from "react";
 import type { PieceType, PieceColor } from "@/types/chess";
 import { useSockets } from "@/Contexts/SocketContext";
+import { convertToSquare } from "@/utils";
+import Square from "./Square";
 
-interface Piece {
+export interface Piece {
   type: PieceType;
   color: PieceColor;
 }
@@ -12,35 +13,47 @@ type ChessBoardProps = {
   board: (Piece | null)[][];
 };
 
-const ChessBoard: React.FC<ChessBoardProps> = ({ board }) => {
-  const { game } = useSockets();
+const ChessBoard: React.FC<ChessBoardProps> = ({ board: initialBoard }) => {
+  const { gameState, selected, validMoves, selectPiece, makeMove } =
+    useSockets();
+  const [board, setBoard] = useState(initialBoard);
 
   useEffect(() => {
-    game.on("game:update", (data: any) => {
-      console.log("Game update:", data);
-    });
+    if (gameState?.board) setBoard(gameState.board);
+  }, [gameState]);
 
-    return () => {
-      game.off("game:update");
-    };
-  }, [game]);
+  const handleSquareClick = (row: number, col: number) => {
+    const square = convertToSquare(row, col);
+    const clickedPiece = board[row][col];
+
+    if (selected) {
+      makeMove({ from: selected, to: square });
+    } else if (clickedPiece) {
+      selectPiece(square);
+    }
+  };
 
   return (
-    <div className="flex items-center justify-center w-full h-screen bg-neutral-900">
-      <div className="grid grid-cols-8 aspect-square w-full max-w-[90vmin] sm:max-w-[80vmin] md:max-w-[60vmin] lg:max-w-[500px] border-4 border-gray-800">
-        {board.map((row, rowIndex) =>
-          row.map((piece, colIndex) => {
-            const isLight = (rowIndex + colIndex) % 2 === 0;
-            return (
-              <Square
-                key={`${rowIndex}-${colIndex}`}
-                piece={piece}
-                isLight={isLight}
-              />
-            );
-          })
-        )}
-      </div>
+    <div className="grid grid-cols-8 aspect-square w-full max-w-[500px] border-4 border-gray-800">
+      {board.map((row, rIdx) =>
+        row.map((piece, cIdx) => {
+          const isSelected = selected === convertToSquare(rIdx, cIdx);
+          const highlight = validMoves.some(
+            (m) => m.to === convertToSquare(rIdx, cIdx)
+          );
+          const isLight = (rIdx + cIdx) % 2 === 0;
+          return (
+            <Square
+              key={`${rIdx}-${cIdx}`}
+              piece={piece}
+              isSelected={isSelected}
+              highlight={highlight}
+              onClick={() => handleSquareClick(rIdx, cIdx)}
+              isLight={isLight}
+            />
+          );
+        })
+      )}
     </div>
   );
 };

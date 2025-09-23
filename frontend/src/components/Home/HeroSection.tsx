@@ -1,6 +1,14 @@
+// src/components/HeroSection.tsx
 import React from "react";
+import { useNavigate } from "react-router-dom";
 
 const HeroSection: React.FC = () => {
+  const navigate = useNavigate();
+
+  const handleGetStarted = () => {
+    navigate("/chess"); // Navigate to chess board page
+  };
+
   return (
     <section className="relative flex flex-col items-center justify-center w-full h-screen overflow-hidden bg-neutral-900 text-white">
       {/* Animated chessboard background */}
@@ -21,7 +29,7 @@ const HeroSection: React.FC = () => {
         ))}
       </div>
 
-      {/* Gradient overlay to lighten the top */}
+      {/* Gradient overlay */}
       <div className="absolute inset-0 bg-gradient-to-b from-neutral-900/10 via-neutral-900/30 to-neutral-900/70"></div>
 
       {/* Foreground content */}
@@ -34,7 +42,7 @@ const HeroSection: React.FC = () => {
           gameplay anytime.
         </p>
         <button
-          onClick={() => console.log("Button Clicked")}
+          onClick={handleGetStarted}
           className="px-6 py-3 bg-white text-neutral-900 rounded-2xl font-semibold hover:bg-neutral-200 transition-colors"
         >
           Get Started
