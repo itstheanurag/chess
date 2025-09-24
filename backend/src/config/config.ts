@@ -32,7 +32,7 @@ export const corsOptions = {
   credentials: true,
 };
 
-console.log("✅ CORS configuration loaded:", corsOptions);
+// console.log("✅ CORS configuration loaded:", corsOptions);
 
 export const config = {
   // Server configuration

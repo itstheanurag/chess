@@ -1,25 +1,31 @@
 import http from "http";
-import expess from "express";
+import express from "express";
 import { startSocketServer } from "@/libs/socket";
 import { config } from "@/config/config";
 import { corsMiddleware } from "../cors";
 import router from "@/routes";
-import { requestLogger } from "@/middlewares/app/logger";
-import { notFoundHandler } from "@/middlewares/app/not.found.middleware";
-import { errorHandler } from "@/middlewares/app/error.middleware";
+import { requestLogger, notFoundHandler, errorHandler } from "@/middlewares";
 import { logRoutes } from "@/middlewares/app";
-const app = expess();
+
+const app = express();
 const server = http.createServer(app);
 
-app.use(expess.json());
-app.use(expess.urlencoded({ extended: true }));
+const sockets = new Set<import("net").Socket>();
+server.on("connection", (socket) => {
+  sockets.add(socket);
+  socket.on("close", () => sockets.delete(socket));
+});
+
+let socketServer: any = null;
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(corsMiddleware);
 
 app.use(requestLogger);
+app.use(router);
 app.use(notFoundHandler);
 app.use(errorHandler);
-
-app.use(router);
 
 logRoutes(app);
 
@@ -36,14 +42,25 @@ export const startServer = () => {
     );
   });
 
-  startSocketServer(server);
+  socketServer = startSocketServer(server);
 };
 
 export const shutdown = (signal: string) => {
   console.log(`\n${signal} received. Shutting down gracefully...`);
   server.close(() => {
     console.log("HTTP server closed");
+    if (socketServer && typeof socketServer.close === "function") {
+      socketServer.close();
+      console.log("Socket server closed");
+    }
     process.exit(0);
   });
-  setTimeout(() => process.exit(1), 10000);
+
+  setTimeout(() => {
+    console.warn(
+      `Grace period expired. Forcing close of ${sockets.size} remaining connection(s).`
+    );
+    sockets.forEach((socket) => socket.destroy());
+    process.exit(1);
+  }, 10000).unref();
 };

@@ -1,4 +1,4 @@
-import { shutdown, startServer } from "./libs/server";
+import { shutdown, startServer } from "@/libs/server";
 
 startServer();
 
