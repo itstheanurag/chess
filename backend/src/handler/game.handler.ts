@@ -143,6 +143,7 @@ export const getValidMoves = async (req: Request, res: Response) => {
     );
   }
 };
+
 export const listGames = async (req: Request, res: Response) => {
   let rooms = Object.entries(activeGames)
     .filter(([_, game]) => !game.isFull())
@@ -151,7 +152,7 @@ export const listGames = async (req: Request, res: Response) => {
   if (rooms.length === 0) {
     const newRoomId = `room-${Date.now()}`;
     activeGames[newRoomId] = new ChessGame();
-    rooms = [newRoomId];
+    rooms.push(newRoomId);
   }
 
   return sendResponse(res, { rooms }, "Active games fetched successfully");

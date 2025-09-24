@@ -4,9 +4,6 @@ import { JoinGameData, MoveData } from "@/types";
 import { Square } from "chess.js";
 import { randomUUID } from "crypto";
 
-/**
- * Finds an available room with an open seat, or creates a new one.
- */
 function getOrCreateRoom(
   roomId: string,
   playerName: string
@@ -14,21 +11,19 @@ function getOrCreateRoom(
   roomId: string;
   game: ChessGame;
 } {
-  // Reuse any non-full game
   for (const [existingRoomId, game] of Object.entries(activeGames)) {
     if (existingRoomId === roomId && game.isFull()) {
-      // join as spectator
       game.addSpectator(randomUUID());
       console.log(`👀 Joined existing room as spectator: ${roomId}`);
       return { roomId: existingRoomId, game };
     } else if (existingRoomId === roomId && !game.isFull()) {
       game.joinPlayer(playerName);
+      return { roomId, game };
     }
   }
 
   const game = new ChessGame();
   activeGames[roomId] = game;
-
   console.log(`🆕 Created new game room: ${roomId}`);
   return { roomId, game };
 }
@@ -41,7 +36,6 @@ export const initializeGameNamespace = (nsp: Namespace) => {
     console.log("Active rooms:", Object.keys(activeGames));
     console.groupEnd();
 
-    // === Join Game ===
     socket.on("joinGame", (data: JoinGameData) => {
       console.group(`🎮 [joinGame] ${socket.id}`);
       console.log("Join data:", data);
@@ -53,20 +47,17 @@ export const initializeGameNamespace = (nsp: Namespace) => {
         ? activeGames[requestedRoom]
         : undefined;
 
-      // If room is missing or full, create/find a new one
       if (!game || game.isFull()) {
         ({ roomId, game } = getOrCreateRoom(roomId, playerName));
       }
 
       socket.join(roomId);
-      console.log(`📌 ${playerName} joined room: ${roomId}`);
 
       if (!isSpectator) {
         try {
           const playerColor = game.joinPlayer(playerName);
           console.log(`👤 Player joined: ${playerName} as ${playerColor}`);
 
-          // Send roomId back to the joining player
           socket.emit("gameJoined", {
             success: true,
             playerColor,
@@ -74,7 +65,6 @@ export const initializeGameNamespace = (nsp: Namespace) => {
             gameState: game.getState(),
           });
 
-          // Notify other clients in the room
           nsp.to(roomId).emit("playerJoined", {
             playerName,
             playerColor,
@@ -96,7 +86,6 @@ export const initializeGameNamespace = (nsp: Namespace) => {
       console.groupEnd();
     });
 
-    // === Make Move ===
     socket.on("makeMove", (data: MoveData) => {
       const { room, move, playerName } = data;
       const game = activeGames[room];
