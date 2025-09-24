@@ -3,7 +3,7 @@ import axios, { AxiosError } from "axios";
 import { flushLocalTokens, getToken, saveToken } from "..";
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL,
+  baseURL: import.meta.env.VITE_API_URL,
   timeout: 10000,
   headers: {
     "Content-Type": "application/json",

@@ -12,7 +12,7 @@ interface GameContextValue {
   gameState: any;
   selected: Square | null;
   validMoves: Move[];
-  isJoined: boolean; // <── added
+  isJoined: boolean;
   joinGame: (room: string, playerName: string, isSpectator?: boolean) => void;
   makeMove: (move: { from: Square; to: Square; promotion?: string }) => void;
   selectPiece: (square: Square) => void;
@@ -42,7 +42,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({
     game.on("gameReset", ({ gameState }) => {
       setGameState(gameState);
       chess.reset();
-      setIsJoined(false); // reset join state on reset if needed
+      setIsJoined(false); 
     });
 
     game.on("gameJoined", ({ gameState }) => {
@@ -64,7 +64,11 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({
     };
   }, [sockets, chess]);
 
-  const joinGame = (room: string, playerName: string, isSpectator = false) => {
+  const joinGame = (
+    room: string,
+    playerName: string,
+    isSpectator: boolean = false
+  ) => {
     sockets.game.emit("joinGame", { room, playerName, isSpectator });
   };
 
@@ -74,11 +78,11 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({
     setValidMoves(moves);
   };
 
-    const makeMove = (move: { from: Square; to: Square; promotion?: string }) => {
-      const isValid = validMoves.some((m) => m.to === move.to);
-      if (!isValid) return console.warn("Invalid move locally");
-      sockets.game.emit("makeMove", { room: gameState?.room, move });
-    };
+  const makeMove = (move: { from: Square; to: Square; promotion?: string }) => {
+    const isValid = validMoves.some((m) => m.to === move.to);
+    if (!isValid) return console.warn("Invalid move locally");
+    sockets.game.emit("makeMove", { room: gameState?.room, move });
+  };
 
   const clearSelection = () => {
     setSelected(null);

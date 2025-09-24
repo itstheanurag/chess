@@ -4,8 +4,9 @@ import {
   getGame,
   makeMove,
   getValidMoves,
-} from "@/handler/game.handler";
-import { authGuard } from "@/middlewares/auth.guard";
+  listGames,
+} from "@/handler";
+import { authGuard } from "@/middlewares";
 
 const GameRouter: Router = Router();
 
@@ -22,6 +23,8 @@ GameRouter.get("/health", (_req: any, res: any) => {
     timestamp: new Date().toISOString(),
   });
 });
+
+GameRouter.get("/list", listGames);
 
 // Apply auth guard to all game routes
 GameRouter.use(authGuard);

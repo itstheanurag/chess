@@ -3,7 +3,6 @@ import type { Piece } from "@/types/chess";
 import { useSockets } from "@/Contexts/SocketContext";
 import { convertToSquare } from "@/utils";
 import Square from "./Square";
-import axios from "axios";
 import api from "@/lib/axios";
 
 type ChessBoardProps = {
@@ -26,16 +25,21 @@ const ChessBoard: React.FC<ChessBoardProps> = ({ board: initialBoard }) => {
   const [rooms, setRooms] = useState<string[]>([]);
   const [selectedRoom, setSelectedRoom] = useState<string>("");
 
+  const [playerName] = useState(() => {
+    const randomId = Math.floor(Math.random() * 9000 + 1000);
+    return `Player-${randomId}`;
+  });
+
   useEffect(() => {
     if (gameState?.board) setBoard(gameState.board);
-  }, [gameState])
+  }, [gameState]);
+
   useEffect(() => {
     const fetchRooms = async () => {
       try {
-        const { data } = await api.get("/game/list");
-        console.log(data.data, "rooms data");
+        const { data } = await api.get("/games/list");
+        console.log(data, "rooms data");
         setRooms(data.data.rooms);
-        if (data.data?.rooms?.length) setSelectedRoom(data.rooms[0]);
       } catch (err) {
         console.error("Failed to fetch rooms:", err);
       }
@@ -46,7 +50,7 @@ const ChessBoard: React.FC<ChessBoardProps> = ({ board: initialBoard }) => {
   const handleSquareClick = (row: number, col: number) => {
     if (!isJoined) {
       const roomToJoin = selectedRoom || `room-${Date.now()}`;
-      joinGame(roomToJoin, "Guest");
+      joinGame(roomToJoin, playerName);
       return;
     }
 
@@ -65,6 +69,7 @@ const ChessBoard: React.FC<ChessBoardProps> = ({ board: initialBoard }) => {
     <>
       {!isJoined && (
         <div className="mb-4">
+          <p className="mb-2 font-semibold">Your Name: {playerName}</p>
           <label className="mr-2">Select Room:</label>
           <select
             value={selectedRoom}

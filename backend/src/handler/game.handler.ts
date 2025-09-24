@@ -1,11 +1,9 @@
 import { Request, Response } from "express";
-import { ChessGame } from "@/games/chess.game";
+import { activeGames, ChessGame } from "@/games/chess.game";
 import { Square, Move as ChessMove } from "chess.js";
 import { v4 as uuidv4 } from "uuid";
 import { sendResponse, sendError } from "@/utils/helper";
 import { GameMoveResult } from "@/types";
-
-const activeGames: Record<string, ChessGame> = {};
 
 function getGameStatus(game: ChessGame): string {
   if (game.isCheckmate()) return "checkmate";
@@ -144,4 +142,17 @@ export const getValidMoves = async (req: Request, res: Response) => {
       error instanceof Error ? error.message : "Unknown error"
     );
   }
+};
+export const listGames = async (req: Request, res: Response) => {
+  let rooms = Object.entries(activeGames)
+    .filter(([_, game]) => !game.isFull())
+    .map(([id]) => id);
+
+  if (rooms.length === 0) {
+    const newRoomId = `room-${Date.now()}`;
+    activeGames[newRoomId] = new ChessGame();
+    rooms = [newRoomId];
+  }
+
+  return sendResponse(res, { rooms }, "Active games fetched successfully");
 };

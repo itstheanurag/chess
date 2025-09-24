@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
-import { JWT_SECRET } from "../config/config";
+import { JWT_CONFIG } from "@/config";
+import { sendError } from "@/utils/helper";
 
 declare global {
   namespace Express {
@@ -11,44 +12,28 @@ declare global {
 }
 
 export const authGuard = (req: Request, res: Response, next: NextFunction) => {
-  // Get token from header
   const authHeader = req.header("Authorization");
 
   if (!authHeader) {
-    res.status(401).json({
-      success: false,
-      message: "No token, authorization denied",
-    });
-    return;
+    return sendError(res, "No Authorization Set, authorization denied", 401);
   }
 
-  // Check if token is in the correct format
   const token = authHeader.startsWith("Bearer ")
     ? authHeader.split(" ")[1]
     : authHeader;
 
   if (!token) {
-    res.status(401).json({
-      success: false,
-      message: "No token, authorization denied",
-    });
-    return;
+    return sendError(res, "No token, authorization denied", 401);
   }
 
   try {
-    // Verify token
-    const decoded = jwt.verify(token, JWT_SECRET);
-
-    // Add user from payload
+    const decoded = jwt.verify(token, JWT_CONFIG.accessTokenSecret);
     req.user = decoded;
 
     next();
   } catch (err) {
     console.error("Auth error:", err);
-    res.status(401).json({
-      success: false,
-      message: "Token is not valid",
-    });
+    return sendError(res, "Token is not valid", 401);
   }
 };
 
@@ -58,10 +43,7 @@ export const authGuard = (req: Request, res: Response, next: NextFunction) => {
 export const roleGuard = (roles: string | string[]) => {
   return (req: Request, res: Response, next: NextFunction) => {
     if (!req.user) {
-      return res.status(401).json({
-        success: false,
-        message: "Not authorized",
-      });
+      return sendError(res, "Not authorized", 401);
     }
 
     const userRoles = Array.isArray(req.user.roles)
@@ -72,19 +54,13 @@ export const roleGuard = (roles: string | string[]) => {
     const hasRole = requiredRoles.some((role) => userRoles.includes(role));
 
     if (!hasRole) {
-      return res.status(403).json({
-        success: false,
-        message: "Insufficient permissions",
-      });
+      return sendError(res, "Forbidden: Insufficient role", 403);
     }
 
     next();
   };
 };
 
-/**
- * Middleware to check if user is the owner of a resource
- */
 export const ownerGuard = (options: {
   paramField?: string;
   userField?: string;
@@ -103,30 +79,20 @@ export const ownerGuard = (options: {
       const resource = await model.findById(req.params[paramField]);
 
       if (!resource) {
-        return res.status(404).json({
-          success: false,
-          message: "Resource not found",
-        });
+        return sendError(res, "Resource not found", 404);
       }
 
       // Check if user is the owner
       if (resource[userField].toString() !== req.user.id) {
-        return res.status(403).json({
-          success: false,
-          message: errorMessage,
-        });
+        return sendError(res, errorMessage, 403);
       }
 
-      // Attach resource to request for use in the route handler
       (req as any).resource = resource;
 
       next();
     } catch (err) {
       console.error("Owner guard error:", err);
-      return res.status(500).json({
-        success: false,
-        message: "Server error",
-      });
+      return sendError(res, "Server error", 500);
     }
   };
 };

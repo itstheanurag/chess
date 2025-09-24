@@ -3,7 +3,7 @@ import { Server as IOServer, Namespace } from "socket.io";
 import { initializeGameNamespace } from "./game.socket";
 import { initializeChatNamespace } from "./chat.socket";
 import { socketAuthGuard } from "@/middlewares";
-import { config } from "@/config/config";
+import { config } from "@/config";
 
 export const startSocketServer = (server: HttpServer) => {
   const io = new IOServer(server, {

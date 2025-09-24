@@ -1,7 +1,7 @@
 import http from "http";
 import express from "express";
 import { startSocketServer } from "@/libs/socket";
-import { config } from "@/config/config";
+import { config } from "@/config";
 import { corsMiddleware } from "../cors";
 import router from "@/routes";
 import { requestLogger, notFoundHandler, errorHandler } from "@/middlewares";

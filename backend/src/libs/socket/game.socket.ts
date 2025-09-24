@@ -1,17 +1,44 @@
 import { Namespace, Socket } from "socket.io";
-import { ChessGame } from "@/games/chess.game";
+import { activeGames, ChessGame } from "@/games/chess.game";
 import { JoinGameData, MoveData } from "@/types";
 import { Square } from "chess.js";
+import { randomUUID } from "crypto";
 
-const activeGames: Record<string, ChessGame> = {};
+/**
+ * Finds an available room with an open seat, or creates a new one.
+ */
+function getOrCreateRoom(
+  roomId: string,
+  playerName: string
+): {
+  roomId: string;
+  game: ChessGame;
+} {
+  // Reuse any non-full game
+  for (const [existingRoomId, game] of Object.entries(activeGames)) {
+    if (existingRoomId === roomId && game.isFull()) {
+      // join as spectator
+      game.addSpectator(randomUUID());
+      console.log(`👀 Joined existing room as spectator: ${roomId}`);
+      return { roomId: existingRoomId, game };
+    } else if (existingRoomId === roomId && !game.isFull()) {
+      game.joinPlayer(playerName);
+    }
+  }
 
+  const game = new ChessGame();
+  activeGames[roomId] = game;
+
+  console.log(`🆕 Created new game room: ${roomId}`);
+  return { roomId, game };
+}
 
 export const initializeGameNamespace = (nsp: Namespace) => {
   console.log(`✅ Game namespace initialized: ${nsp.name}`);
 
   nsp.on("connection", (socket: Socket) => {
     console.group(`🔗 Connection: ${socket.id}`);
-    console.log("Active rooms at connection:", Object.keys(activeGames));
+    console.log("Active rooms:", Object.keys(activeGames));
     console.groupEnd();
 
     // === Join Game ===
@@ -19,31 +46,39 @@ export const initializeGameNamespace = (nsp: Namespace) => {
       console.group(`🎮 [joinGame] ${socket.id}`);
       console.log("Join data:", data);
 
-      const { room, playerName, isSpectator = false } = data;
+      const { room: requestedRoom, playerName, isSpectator = false } = data;
 
-      if (!activeGames[room]) {
-        activeGames[room] = new ChessGame();
-        console.log(`🆕 Created new game for room: ${room}`);
+      let roomId = requestedRoom;
+      let game: ChessGame | undefined = requestedRoom
+        ? activeGames[requestedRoom]
+        : undefined;
+
+      // If room is missing or full, create/find a new one
+      if (!game || game.isFull()) {
+        ({ roomId, game } = getOrCreateRoom(roomId, playerName));
       }
 
-      const game = activeGames[room];
-      socket.join(room);
-      console.log(`📌 Socket joined room: ${room}`);
+      socket.join(roomId);
+      console.log(`📌 ${playerName} joined room: ${roomId}`);
 
       if (!isSpectator) {
         try {
           const playerColor = game.joinPlayer(playerName);
           console.log(`👤 Player joined: ${playerName} as ${playerColor}`);
 
+          // Send roomId back to the joining player
           socket.emit("gameJoined", {
             success: true,
             playerColor,
+            roomId,
             gameState: game.getState(),
           });
 
-          nsp.to(room).emit("playerJoined", {
+          // Notify other clients in the room
+          nsp.to(roomId).emit("playerJoined", {
             playerName,
             playerColor,
+            roomId,
             gameState: game.getState(),
           });
         } catch (err) {
@@ -55,103 +90,70 @@ export const initializeGameNamespace = (nsp: Namespace) => {
         }
       } else {
         console.log(`👀 Spectator joined: ${playerName}`);
-        socket.emit("spectatorJoined", { gameState: game.getState() });
-        socket.to(room).emit("spectatorJoined", { playerName });
+        socket.emit("spectatorJoined", { roomId, gameState: game.getState() });
+        socket.to(roomId).emit("spectatorJoined", { playerName });
       }
       console.groupEnd();
     });
 
     // === Make Move ===
     socket.on("makeMove", (data: MoveData) => {
-      console.group(`♟ [makeMove] ${socket.id}`);
-      console.log("Move data:", data);
-
       const { room, move, playerName } = data;
       const game = activeGames[room];
       if (!game) {
-        console.warn(`⚠ No game found for room: ${room}`);
         socket.emit("error", { success: false, message: "Game not found" });
-        console.groupEnd();
         return;
       }
 
       const playerColor =
         game.getState().whitePlayer === playerName ? "w" : "b";
-      console.log(
-        `Expected turn: ${game.turn()}, Player color: ${playerColor}`
-      );
-
       if (game.turn() !== playerColor) {
-        console.warn(`🚫 Invalid turn for player: ${playerName}`);
         socket.emit("error", { success: false, message: "Not your turn" });
-        console.groupEnd();
         return;
       }
 
-      const fromSquare = move.from as Square;
-      const toSquare = move.to as Square;
-      const validMoves = game.getValidMoves(fromSquare);
-      const isValid = validMoves.some((m) => m.to === toSquare);
-
-      console.table(validMoves.map((m) => ({ from: m.from, to: m.to })));
-
+      const { from, to, promotion } = move;
+      const isValid = game
+        .getValidMoves(from as Square)
+        .some((m) => m.to === to);
       if (!isValid) {
-        console.warn(`🚫 Invalid move from ${fromSquare} to ${toSquare}`);
         socket.emit("error", { success: false, message: "Invalid move" });
-        console.groupEnd();
         return;
       }
 
       const result = game.makeMove({
-        from: fromSquare,
-        to: toSquare,
-        promotion: move.promotion as "q" | "r" | "b" | "n" | undefined,
+        from: from as Square,
+        to: to as Square,
+        promotion,
       });
-
       if (!result.success) {
-        console.error("❌ Move failed:", result.error);
         socket.emit("error", { success: false, message: result.error });
-        console.groupEnd();
         return;
       }
 
-      console.log(`✅ Move successful: ${fromSquare} → ${toSquare}`);
-      nsp.to(room).emit("moveMade", {
-        move: result,
-        gameState: game.getState(),
-      });
-      console.groupEnd();
+      nsp
+        .to(room)
+        .emit("moveMade", { move: result, gameState: game.getState() });
     });
 
     // === Reset Game ===
     socket.on("resetGame", (room: string) => {
-      console.group(`🔄 [resetGame] ${socket.id}`);
-      console.log(`Reset request for room: ${room}`);
       const game = activeGames[room];
-      if (!game) {
-        console.warn(`⚠ No game to reset in room: ${room}`);
-        console.groupEnd();
-        return;
-      }
+      if (!game) return;
       game.resetGame();
-      console.log(`✅ Game reset for room: ${room}`);
       nsp.to(room).emit("gameReset", { gameState: game.getState() });
-      console.groupEnd();
     });
 
     // === Disconnect ===
     socket.on("disconnect", () => {
-      console.group(`❎ Disconnect: ${socket.id}`);
       Object.entries(activeGames).forEach(([roomId, game]) => {
         if (game.isEmpty()) {
           delete activeGames[roomId];
-          console.log(`🗑 Removed empty game for room: ${roomId}`);
           nsp.to(roomId).emit("gameEnded", {
             message: "Game ended - no players remaining",
           });
         }
       });
-      console.groupEnd();
     });
   });
 };

@@ -1,7 +1,6 @@
 import { Request, Response } from "express";
 import * as jwt from "jsonwebtoken";
-
-import { JWT_SECRET, TOKEN_EXPIRES_IN } from "@/config/config";
+import { JWT_CONFIG } from "@/config";
 import { sendError, sendResponse } from "@/utils/helper";
 
 interface UserPayload {
@@ -41,8 +40,8 @@ export const register = async (
   try {
     const token = jwt.sign(
       { userId: newUser.id, email: email },
-      JWT_SECRET as jwt.Secret,
-      { expiresIn: TOKEN_EXPIRES_IN } as jwt.SignOptions
+      JWT_CONFIG.accessTokenSecret as jwt.Secret,
+      { expiresIn: JWT_CONFIG.accessTokenExpiresIn } as jwt.SignOptions
     );
 
     res.cookie("token", token, {
@@ -82,8 +81,8 @@ export const login = async (req: Request, res: Response): Promise<Response> => {
 
     const token = jwt.sign(
       { userId: user.id, email },
-      JWT_SECRET as jwt.Secret,
-      { expiresIn: TOKEN_EXPIRES_IN } as jwt.SignOptions
+      JWT_CONFIG.accessTokenSecret as jwt.Secret,
+      { expiresIn: JWT_CONFIG.accessTokenExpiresIn } as jwt.SignOptions
     );
 
     res.cookie("token", token, {

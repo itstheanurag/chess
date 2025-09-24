@@ -1,8 +1,4 @@
-import {
-  allowedOrigins,
-  allowedMethods,
-  allowedHeaders,
-} from "@/config/config";
+import { allowedOrigins, allowedMethods, allowedHeaders } from "@/config";
 import cors, { CorsOptions } from "cors";
 
 const corsOptions: CorsOptions = {

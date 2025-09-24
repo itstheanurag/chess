@@ -1,6 +1,8 @@
 import { Chess, Move, Square, Color } from "chess.js";
 import { GameState, GameMoveResult, GameStatus } from "@/types";
 
+export const activeGames: Record<string, ChessGame> = {};
+
 export class ChessGame extends Chess {
   private players: { white?: string; black?: string } = {};
   private spectators: Set<string> = new Set();
@@ -25,13 +27,16 @@ export class ChessGame extends Chess {
     else this.spectators.delete(playerName);
   }
 
+  isFull(): boolean {
+    return !!this.players.white && !!this.players.black;
+  }
+
   isEmpty(): boolean {
     return (
       !this.players.white && !this.players.black && this.spectators.size === 0
     );
   }
 
-  /** Make a move and return simplified result */
   makeMove(
     move: string | { from: string; to: string; promotion?: string }
   ): GameMoveResult {
@@ -74,7 +79,6 @@ export class ChessGame extends Chess {
     return this.moves({ square, verbose: true }) as Move[];
   }
 
-  /** Reset game */
   resetGame(): void {
     this.reset();
   }

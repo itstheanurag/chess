@@ -32,10 +32,7 @@ export const corsOptions = {
   credentials: true,
 };
 
-// console.log("✅ CORS configuration loaded:", corsOptions);
-
 export const config = {
-  // Server configuration
   server: {
     port: parseInt(process.env.PORT || "4000", 10),
     nodeEnv: process.env.NODE_ENV || "development",
@@ -43,17 +40,17 @@ export const config = {
     isDevelopment: process.env.NODE_ENV !== "production",
   },
 
-  // JWT configuration
   jwt: {
-    secret: process.env.JWT_SECRET || "your-secret-key",
-    gameSecret: process.env.GAME_JWT_SECRET || "your-game-secret-key",
-    expiresIn: process.env.TOKEN_EXPIRES_IN || "1h",
-    refreshExpiresIn: process.env.REFRESH_TOKEN_EXPIRES_IN || "7d",
+    accessTokenSecret: process.env.JWT_ACCESS_SECRET || "your-secret-key",
+    refreshTokenSecret:
+      process.env.REFRESH_TOKEN_SECRET || "your-refresh-secret-key",
+    accessTokenExpiresIn: process.env.JWT_ACCESS_EXPIRES_IN || "1h",
+    refreshTokenExpiresIn: process.env.REFRESH_TOKEN_EXPIRES_IN || "7d",
+    // gameSecret: process.env.JWT_GAME_SECRET || "your-game-secret-key",
     issuer: "chess-api",
     audience: "chess-client",
   },
 
-  // CORS configuration
   cors: {
     ...corsOptions,
   },
@@ -65,9 +62,4 @@ export const config = {
   },
 } as const;
 
-export const { JWT_SECRET, GAME_JWT_SECRET, TOKEN_EXPIRES_IN, FRONTEND_URL } = {
-  JWT_SECRET: config.jwt.secret,
-  GAME_JWT_SECRET: config.jwt.gameSecret,
-  TOKEN_EXPIRES_IN: config.jwt.expiresIn,
-  FRONTEND_URL: config.cors.origin[0],
-};
+export const JWT_CONFIG = config.jwt;
