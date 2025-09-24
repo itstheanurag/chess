@@ -5,7 +5,7 @@ import React, {
   useMemo,
   useState,
 } from "react";
-import { connectSockets } from "@/sockets";
+import { connectSockets } from "@/lib/sockets";
 import { Chess, Square, Move } from "chess.js";
 
 interface GameContextValue {
