@@ -1,3 +1,4 @@
+// Piece.tsx
 import React from "react";
 import {
   FaChessPawn,
@@ -7,9 +8,22 @@ import {
   FaChessQueen,
   FaChessKing,
 } from "react-icons/fa";
-import type { PieceColor, PieceProps, PieceType } from "@/types/chess";
+import type { PieceProps } from "@/types/chess";
 
-const pieceIcons: Record<PieceType, React.ComponentType> = {
+// Map FEN-like single letters to piece type names
+const typeMap: Record<
+  string,
+  "pawn" | "rook" | "knight" | "bishop" | "queen" | "king"
+> = {
+  p: "pawn",
+  r: "rook",
+  n: "knight",
+  b: "bishop",
+  q: "queen",
+  k: "king",
+};
+
+const pieceIcons = {
   pawn: FaChessPawn,
   rook: FaChessRook,
   knight: FaChessKnight,
@@ -19,11 +33,17 @@ const pieceIcons: Record<PieceType, React.ComponentType> = {
 };
 
 const Piece: React.FC<PieceProps> = ({ type, color }) => {
-  const Icon = pieceIcons[type];
+  const normalizedType = typeMap[type.toLowerCase()] ?? type;
+  const Icon = pieceIcons[normalizedType as keyof typeof pieceIcons];
+
+  if (!Icon) {
+    return <div className="text-red-500">Invalid piece: {type}</div>;
+  }
+
   return (
     <div
       className={`text-2xl sm:text-3xl md:text-4xl lg:text-5xl ${
-        color === "white"
+        color == "w" || color === "white"
           ? "text-neutral-400 drop-shadow-lg shadow-white"
           : "text-neutral-900 drop-shadow-lg"
       }`}

@@ -5,7 +5,7 @@ export type PieceType =
   | "bishop"
   | "queen"
   | "king";
-export type PieceColor = "white" | "black";
+export type PieceColor = "white" | "black" | "w" | "b" | null;
 
 export interface Piece {
   type: PieceType;
