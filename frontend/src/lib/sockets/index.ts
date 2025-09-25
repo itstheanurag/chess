@@ -1,3 +1,4 @@
+import { getToken } from "@/utils";
 import { io, Socket } from "socket.io-client";
 
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || "http://localhost:3000";
@@ -6,36 +7,38 @@ export interface NamedSocket extends Socket {
   namespace: string;
 }
 
-export const connectSockets = (token?: string) => {
-  const commonOptions = {
+type Namespace = "game" | "chat";
+
+interface ConnectSocketOptions {
+  namespace: Namespace;
+}
+
+export const connectSocket = ({
+  namespace,
+}: ConnectSocketOptions): NamedSocket => {
+  const token = getToken("accessToken") ?? undefined;
+
+  const options = {
     path: "/socket.io/",
-    transports: ["websocket"],
-    auth: token ? { token } : undefined,
+    transports: ["websocket"] as string[],
+    auth: namespace === "chat" ? undefined : token ? { token } : undefined,
     timeout: 10000,
   };
 
-  const game = io(`${SOCKET_URL}/game`, commonOptions) as NamedSocket;
-  const chat = io(`${SOCKET_URL}/chat`, {
-    ...commonOptions,
-    auth: undefined,
-  }) as NamedSocket;
+  const socket = io(`${SOCKET_URL}/${namespace}`, options) as NamedSocket;
+  socket.namespace = namespace;
 
-  game.namespace = "game";
-  chat.namespace = "chat";
-
-  [game, chat].forEach((socket) => {
-    socket.on("connect", () => {
-      console.log(`Connected to ${socket.namespace} as ${socket.id}`);
-    });
-
-    socket.on("disconnect", (reason) => {
-      console.warn(`Disconnected from ${socket.namespace} (${reason})`);
-    });
-
-    socket.on("connect_error", (err) => {
-      console.error(`Connection error to ${socket.namespace}:`, err.message);
-    });
+  socket.on("connect", () => {
+    console.log(`Connected to ${socket.namespace} as ${socket.id}`);
   });
 
-  return { game, chat };
+  socket.on("disconnect", (reason) => {
+    console.warn(`Disconnected from ${socket.namespace} (${reason})`);
+  });
+
+  socket.on("connect_error", (err) => {
+    console.error(`Connection error to ${socket.namespace}:`, err.message);
+  });
+
+  return socket;
 };

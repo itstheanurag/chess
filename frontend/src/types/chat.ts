@@ -1,3 +1,5 @@
+import { NamedSocket } from "@/lib";
+
 export interface ChatMessage {
   id: string;
   user: string;
@@ -6,12 +8,12 @@ export interface ChatMessage {
 }
 
 export interface ChatState {
-  socket: WebSocket | null;
+  socket?: NamedSocket | null;
   isConnected: boolean;
   messages: ChatMessage[];
+  connect: () => void;
   joinRoom: (roomId: string) => void;
-  leaveRoom: () => void;
-  sendMessage: (message: string) => void;
-  setSocket: (socket: WebSocket) => void;
+  leaveRoom: (roomId: string) => void;
+  sendMessage: (roomId: string, message: string) => void;
   addMessage: (msg: ChatMessage) => void;
 }
