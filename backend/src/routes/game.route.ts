@@ -26,7 +26,6 @@ GameRouter.get("/health", (_req: any, res: any) => {
 
 GameRouter.get("/list", listGames);
 
-// Apply auth guard to all game routes
 GameRouter.use(authGuard);
 
 /**

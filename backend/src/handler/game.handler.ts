@@ -1,38 +1,102 @@
 import { Request, Response } from "express";
-import { activeGames, ChessGame } from "@/games/chess.game";
-import { Square, Move as ChessMove } from "chess.js";
-import { v4 as uuidv4 } from "uuid";
+import { ChessGame } from "@/games/chess.game";
+import { Square } from "chess.js";
 import { sendResponse, sendError } from "@/utils/helper";
-import { GameMoveResult } from "@/types";
+import { AuthenticatedRequest } from "@/types";
+import prisma from "@/libs/db";
+import { createGameSchema } from "@/schema/game";
 
-function getGameStatus(game: ChessGame): string {
-  if (game.isCheckmate()) return "checkmate";
-  if (game.isDraw()) return "draw";
-  if (game.isStalemate()) return "stalemate";
-  if (game.isThreefoldRepetition()) return "threefold";
-  if (game.isInsufficientMaterial()) return "insufficient";
-  return "active";
-}
-
-export const createGame = async (req: Request, res: Response) => {
+export const createGame = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const { fen } = req.body;
-    const game = new ChessGame(fen);
-    const gameId = uuidv4();
-    activeGames[gameId] = game;
+    const userId = BigInt(req.user!.id);
 
-    return sendResponse(
-      res,
-      { gameId, ...game.getState() },
-      "Game created successfully",
-      201
-    );
+    const result = createGameSchema.safeParse(req.body);
+    if (!result.success) {
+      return sendError(res, 400, "Invalid request", result.error);
+    }
+
+    const { type, passcode } = result.data;
+
+    if (type === "PRIVATE" && !passcode) {
+      return sendError(res, 400, "Passcode is required for private games");
+    }
+
+    if (type === "PUBLIC" && passcode) {
+      return sendError(res, 400, "Passcode is not allowed for public games");
+    }
+
+    const chess = new ChessGame();
+    const initialFen = chess.fen();
+    const game = await prisma.game.create({
+      data: {
+        whitePlayerId: BigInt(userId),
+        blackPlayerId: null,
+        status: "WAITING",
+        type: type || "PUBLIC",
+        passcode: type === "PRIVATE" ? passcode : null,
+        isVisible: type === "PUBLIC",
+        fen: initialFen,
+        startedAt: null,
+      },
+    });
+
+    return sendResponse(res, 201, game, "Game created successfully");
   } catch (error) {
     console.error("Error creating game:", error);
     return sendError(
       res,
-      "Failed to create game",
       500,
+      "Failed to create game",
+      error instanceof Error ? error.message : "Unknown error"
+    );
+  }
+};
+
+export const joinGame = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { passcode, gameId } = req.body;
+    const userId = BigInt(req.user!.id);
+
+    const game = await prisma.game.findUnique({
+      where: { id: BigInt(gameId) },
+    });
+
+    if (!game) return sendError(res, 404, "Game not found");
+
+    if (game.whitePlayerId === userId || game.blackPlayerId === userId) {
+      return sendError(res, 400, "You are already part of this game");
+    }
+
+    if (game.type === "PRIVATE") {
+      if (!passcode) {
+        return sendError(res, 400, "Passcode is required to join this game");
+      }
+
+      if (game.passcode !== passcode) {
+        return sendError(res, 403, "Invalid passcode");
+      }
+    }
+
+    if (game.blackPlayerId) {
+      return sendError(res, 400, "Game already has two players");
+    }
+
+    const updated = await prisma.game.update({
+      where: { id: BigInt(gameId) },
+      data: {
+        blackPlayerId: userId,
+        status: "ONGOING",
+        startedAt: new Date(),
+      },
+    });
+
+    return sendResponse(res, 200, updated, "Joined game successfully");
+  } catch (error) {
+    console.error("Error joining game:", error);
+    return sendError(
+      res,
+      500,
+      "Failed to join game",
       error instanceof Error ? error.message : "Unknown error"
     );
   }
@@ -41,22 +105,36 @@ export const createGame = async (req: Request, res: Response) => {
 export const getGame = async (req: Request, res: Response) => {
   try {
     const { gameId } = req.params;
-    if (!gameId) return sendError(res, "Game ID is required", 400);
+    if (!gameId) return sendError(res, 400, "Game ID is required");
 
-    const game = activeGames[gameId];
-    if (!game) return sendError(res, "Game not found", 404);
+    const game = await prisma.game.findUnique({
+      where: { id: BigInt(gameId) },
+      include: { moves: { orderBy: { moveNumber: "asc" } } },
+    });
+
+    if (!game) return sendError(res, 404, "Game not found");
+
+    const chess = new ChessGame(game.fen);
+    // for (const move of game.moves) {
+    //   chess.makeMove({
+    //     from: move.fromSquare as Square,
+    //     to: move.toSquare as Square,
+    //     promotion: move.promotion || undefined,
+    //   });
+    // }
 
     return sendResponse(
       res,
-      { gameId, ...game.getState() },
+      200,
+      { gameId, ...chess.getState(), dbGame: game },
       "Game fetched successfully"
     );
   } catch (error) {
     console.error("Error getting game:", error);
     return sendError(
       res,
-      "Failed to get game",
       500,
+      "Failed to get game",
       error instanceof Error ? error.message : "Unknown error"
     );
   }
@@ -67,40 +145,65 @@ export const makeMove = async (req: Request, res: Response) => {
     const { gameId } = req.params;
     const { from, to, promotion } = req.body;
 
-    if (!gameId) return sendError(res, "Game ID is required", 400);
+    if (!gameId) return sendError(res, 400, "Game ID is required");
     if (!from || !to)
-      return sendError(res, 'Both "from" and "to" fields are required', 400);
+      return sendError(res, 400, 'Both "from" and "to" fields are required');
 
-    const game = activeGames[gameId];
-    if (!game) return sendError(res, "Game not found", 404);
+    const game = await prisma.game.findUnique({
+      where: { id: BigInt(gameId) },
+      include: { moves: { orderBy: { moveNumber: "asc" } } },
+    });
 
-    const moveOptions = {
+    if (!game) return sendError(res, 404, "Game not found");
+
+    const chess = new ChessGame();
+    for (const move of game.moves) {
+      chess.makeMove({
+        from: move.fromSquare as Square,
+        to: move.toSquare as Square,
+        promotion: move.promotion || undefined,
+      });
+    }
+
+    const result = chess.makeMove({
       from: from as Square,
       to: to as Square,
       promotion: promotion?.toLowerCase(),
-    };
+    });
 
-    const result: GameMoveResult = game.makeMove(moveOptions);
     if (!result.success) {
-      const validMoves = game
+      const validMoves = chess
         .getValidMoves(from as Square)
         .map((m) => ({ from: m.from, to: m.to, promotion: m.promotion }));
-      return sendError(res, result.error || "Invalid move", 400, {
+      return sendError(res, 400, result.error || "Invalid move", {
         validMoves,
       });
     }
 
+    await prisma.gameMove.create({
+      data: {
+        gameId: BigInt(gameId),
+        moveNumber: game.moves.length + 1,
+        playerId: null,
+        fromSquare: from,
+        toSquare: to,
+        promotion: promotion?.toLowerCase(),
+        fen: chess.getState().fen,
+      },
+    });
+
     return sendResponse(
       res,
-      { gameId, move: result, ...game.getState() },
+      200,
+      { gameId, move: result, ...chess.getState() },
       "Move executed successfully"
     );
   } catch (error) {
     console.error("Error making move:", error);
     return sendError(
       res,
-      "Failed to make move",
       500,
+      "Failed to make move",
       error instanceof Error ? error.message : "Unknown error"
     );
   }
@@ -111,15 +214,28 @@ export const getValidMoves = async (req: Request, res: Response) => {
     const { gameId } = req.params;
     const { square } = req.query;
 
-    if (!gameId) return sendError(res, "Game ID is required", 400);
-    if (!square) return sendError(res, "Square parameter is required", 400);
+    if (!gameId) return sendError(res, 400, "Game ID is required");
+    if (!square) return sendError(res, 400, "Square parameter is required");
 
-    const game = activeGames[gameId];
-    if (!game) return sendError(res, "Game not found", 404);
+    const game = await prisma.game.findUnique({
+      where: { id: BigInt(gameId) },
+      include: { moves: { orderBy: { moveNumber: "asc" } } },
+    });
+    if (!game) return sendError(res, 404, "Game not found");
 
-    const moves = game.getValidMoves(square as Square);
+    const chess = new ChessGame();
+    for (const move of game.moves) {
+      chess.makeMove({
+        from: move.fromSquare as Square,
+        to: move.toSquare as Square,
+        promotion: move.promotion || undefined,
+      });
+    }
+
+    const moves = chess.getValidMoves(square as Square);
     return sendResponse(
       res,
+      200,
       {
         gameId,
         square,
@@ -137,23 +253,42 @@ export const getValidMoves = async (req: Request, res: Response) => {
     console.error("Error getting valid moves:", error);
     return sendError(
       res,
-      "Failed to get valid moves",
       500,
+      "Failed to get valid moves",
       error instanceof Error ? error.message : "Unknown error"
     );
   }
 };
-
 export const listGames = async (req: Request, res: Response) => {
-  let rooms = Object.entries(activeGames)
-    .filter(([_, game]) => !game.isFull())
-    .map(([id]) => id);
+  try {
+    const { status, type } = req.query;
+    const where: any = {};
+    if (status && typeof status === "string")
+      where.status = status.toUpperCase();
+    if (type && typeof type === "string") where.type = type.toUpperCase();
 
-  if (rooms.length === 0) {
-    const newRoomId = `room-${Date.now()}`;
-    activeGames[newRoomId] = new ChessGame();
-    rooms.push(newRoomId);
+    const games = await prisma.game.findMany({
+      where,
+      select: {
+        id: true,
+        status: true,
+        type: true,
+        fen: true,
+        isVisible: true,
+        createdAt: true,
+      },
+      orderBy: { createdAt: "desc" },
+      take: 50,
+    });
+
+    return sendResponse(res, 200, { games }, "Games fetched successfully");
+  } catch (error) {
+    console.error("Error listing games:", error);
+    return sendError(
+      res,
+      500,
+      "Failed to list games",
+      error instanceof Error ? error.message : "Unknown error"
+    );
   }
-
-  return sendResponse(res, { rooms }, "Active games fetched successfully");
 };
