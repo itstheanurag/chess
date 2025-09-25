@@ -34,3 +34,25 @@ const convertPieceType = (symbol: PieceSymbol): PieceType => {
       return "king";
   }
 };
+
+export function normalizeBoard(
+  boardData: (Piece | null)[][]
+): (Piece | null)[][] {
+  if (Array.isArray(boardData) && Array.isArray(boardData[0])) {
+    return boardData;
+  }
+
+  const emptyBoard: (Piece | null)[][] = Array.from({ length: 8 }, () =>
+    Array(8).fill(null)
+  );
+
+  boardData.forEach((row, rIdx) => {
+    row.forEach((piece, cIdx) => {
+      if (piece) {
+        emptyBoard[rIdx][cIdx] = piece;
+      }
+    });
+  });
+
+  return emptyBoard;
+}

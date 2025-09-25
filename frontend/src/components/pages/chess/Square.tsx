@@ -16,7 +16,6 @@ const Square: React.FC<SquareProps> = ({
         ${isLight ? "bg-neutral-100" : "bg-gray-700"}
         ${isSelected ? "ring-2 ring-yellow-400" : ""}`}
     >
-      {/* Highlight overlay */}
       {highlight && (
         <div className="absolute w-4 h-4 rounded-full bg-green-500/70 pointer-events-none" />
       )}

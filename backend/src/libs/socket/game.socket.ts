@@ -37,9 +37,6 @@ export const initializeGameNamespace = (nsp: Namespace) => {
     console.groupEnd();
 
     socket.on("joinGame", (data: JoinGameData) => {
-      console.group(`🎮 [joinGame] ${socket.id}`);
-      console.log("Join data:", data);
-
       const { room: requestedRoom, playerName, isSpectator = false } = data;
 
       let roomId = requestedRoom;
@@ -56,7 +53,6 @@ export const initializeGameNamespace = (nsp: Namespace) => {
       if (!isSpectator) {
         try {
           const playerColor = game.joinPlayer(playerName);
-          console.log(`👤 Player joined: ${playerName} as ${playerColor}`);
 
           socket.emit("gameJoined", {
             success: true,
@@ -72,14 +68,12 @@ export const initializeGameNamespace = (nsp: Namespace) => {
             gameState: game.getState(),
           });
         } catch (err) {
-          console.error("❌ Failed to join game:", err);
           socket.emit("error", {
             success: false,
             message: err instanceof Error ? err.message : "Unable to join game",
           });
         }
       } else {
-        console.log(`👀 Spectator joined: ${playerName}`);
         socket.emit("spectatorJoined", { roomId, gameState: game.getState() });
         socket.to(roomId).emit("spectatorJoined", { playerName });
       }
@@ -88,24 +82,48 @@ export const initializeGameNamespace = (nsp: Namespace) => {
 
     socket.on("makeMove", (data: MoveData) => {
       const { room, move, playerName } = data;
+      console.log("\n[makeMove] Incoming move:", {
+        room,
+        playerName,
+        move,
+      });
+
       const game = activeGames[room];
       if (!game) {
+        console.error("[makeMove] ❌ Game not found for room:", room);
         socket.emit("error", { success: false, message: "Game not found" });
         return;
       }
 
       const playerColor =
         game.getState().whitePlayer === playerName ? "w" : "b";
+
+      console.log(
+        "[makeMove] Player color:",
+        playerColor,
+        "| Current turn:",
+        game.turn()
+      );
+
       if (game.turn() !== playerColor) {
+        console.warn("[makeMove] ❌ Not player's turn:", {
+          playerName,
+          attemptedColor: playerColor,
+          actualTurn: game.turn(),
+        });
         socket.emit("error", { success: false, message: "Not your turn" });
         return;
       }
 
       const { from, to, promotion } = move;
-      const isValid = game
-        .getValidMoves(from as Square)
-        .some((m) => m.to === to);
+      console.log("[makeMove] Attempting move:", { from, to, promotion });
+
+      const validMoves = game.getValidMoves(from as Square);
+      console.log("[makeMove] Valid moves from", from, ":", validMoves);
+
+      const isValid = validMoves.some((m) => m.to === to);
       if (!isValid) {
+        console.warn("[makeMove] ❌ Invalid move attempted:", { from, to });
         socket.emit("error", { success: false, message: "Invalid move" });
         return;
       }
@@ -115,17 +133,21 @@ export const initializeGameNamespace = (nsp: Namespace) => {
         to: to as Square,
         promotion,
       });
+
       if (!result.success) {
+        console.error("[makeMove] ❌ Move failed:", result.error);
         socket.emit("error", { success: false, message: result.error });
         return;
       }
 
-      nsp
-        .to(room)
-        .emit("moveMade", { move: result, gameState: game.getState() });
+      console.log("[makeMove] ✅ Move successful:", result);
+
+      nsp.to(room).emit("moveMade", {
+        move: result,
+        gameState: game.getState(),
+      });
     });
 
-    // === Reset Game ===
     socket.on("resetGame", (room: string) => {
       const game = activeGames[room];
       if (!game) return;
@@ -133,7 +155,6 @@ export const initializeGameNamespace = (nsp: Namespace) => {
       nsp.to(room).emit("gameReset", { gameState: game.getState() });
     });
 
-    // === Disconnect ===
     socket.on("disconnect", () => {
       Object.entries(activeGames).forEach(([roomId, game]) => {
         if (game.isEmpty()) {

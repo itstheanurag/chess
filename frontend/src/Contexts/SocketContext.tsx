@@ -8,6 +8,7 @@ import React, {
 import { connectSockets } from "@/lib/sockets";
 import { Chess, Square, Move } from "chess.js";
 import { PieceColor } from "@/types/chess";
+import { normalizeBoard } from "@/utils";
 
 interface GameContextValue {
   gameState: any;
@@ -23,9 +24,14 @@ interface GameContextValue {
   clearSelection: () => void;
   room: string | null;
   playerColor: PieceColor;
+  playerName: string;
 }
 
 const SocketContext = createContext<GameContextValue | null>(null);
+
+function generatePlayerName() {
+  return `Player-${Math.floor(Math.random() * 9000 + 1000)}`;
+}
 
 export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
@@ -35,24 +41,28 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({
   const [selected, setSelected] = useState<Square | null>(null);
   const [validMoves, setValidMoves] = useState<Move[]>([]);
   const [isJoined, setIsJoined] = useState(false);
-  const chess = useMemo(() => new Chess(), []);
   const [room, setRoom] = useState<string | null>(null);
   const [playerColor, setPlayerColor] = useState<PieceColor>(null);
+  const [playerName, setPlayerName] = useState<string>(generatePlayerName());
+  const chess = useMemo(() => new Chess(), []);
 
   useEffect(() => {
     const { game } = sockets;
 
     game.on("gameJoined", ({ gameState, playerColor, roomId }) => {
-      setGameState(gameState);
+      console.log({ gameState, playerColor, roomId });
+      const board = normalizeBoard(gameState.board);
+      setGameState({ ...gameState, board: board });
       chess.load(gameState.fen);
       setRoom(roomId);
       setPlayerColor(playerColor);
       setIsJoined(true);
     });
 
-    game.on("moveMade", ({ gameState }) => {
-      setGameState(gameState);
-      chess.load(gameState.fen);
+    game.on("moveMade", (data) => {
+      console.log("MoveMade", data);
+      setGameState(data.gameState);
+      chess.load(data.gameState.fen);
     });
 
     game.on("gameReset", ({ gameState }) => {
@@ -118,6 +128,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({
         clearSelection,
         room,
         playerColor,
+        playerName,
       }}
     >
       {children}
