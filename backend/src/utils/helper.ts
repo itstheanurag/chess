@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction, RequestHandler } from "express";
+import z, { ZodError } from "zod";
 
 export interface ErrorResponse {
   message: string;
@@ -40,9 +41,9 @@ export const asyncHandler = <
  */
 export const sendResponse = (
   res: Response,
+  statusCode: number = 200,
   data: any,
-  message?: string,
-  statusCode: number = 200
+  message?: string
 ) => {
   return res.status(statusCode).json({
     success: true,
@@ -58,16 +59,33 @@ export const sendResponse = (
  * @param statusCode - Optional HTTP status code (default 500)
  * @param details - Optional error details
  */
-export const sendError = (
+export function sendError(
   res: Response,
-  error: string | Error,
-  statusCode: number = 500,
-  details?: any
-) => {
-  const message = error instanceof Error ? error.message : error;
+  statusCode: number,
+  error: unknown,
+  details?: unknown
+): Response<ErrorResponse> {
+
+  if (error instanceof ZodError) {
+    const fieldErrors = z.flattenError(error).fieldErrors;
+
+    return res.status(statusCode).json({
+      success: false,
+      error: fieldErrors,
+      details,
+    });
+  }
+
+  const errorMessage =
+    error instanceof Error
+      ? error.message
+      : typeof error === "string"
+      ? error
+      : "Unknown error occurred";
+
   return res.status(statusCode).json({
     success: false,
-    message,
+    error: errorMessage,
     details,
   });
-};
+}
