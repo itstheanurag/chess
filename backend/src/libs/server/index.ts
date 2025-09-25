@@ -6,6 +6,8 @@ import { corsMiddleware } from "../cors";
 import router from "@/routes";
 import { requestLogger, notFoundHandler, errorHandler } from "@/middlewares";
 import { logRoutes } from "@/middlewares/app";
+import { redisClient } from "../redis";
+import prisma from "../db";
 
 const app = express();
 const server = http.createServer(app);
@@ -29,24 +31,47 @@ app.use(errorHandler);
 
 logRoutes(app);
 
-export const startServer = () => {
+export const startServer = async () => {
   if (server.listening) {
     console.log("Server already running");
     return;
   }
 
-  server.listen(config.server.port, () => {
-    console.log(`🚀 Server running on http://localhost:${config.server.port}`);
-    console.log(
-      `🩺 Health check: http://localhost:${config.server.port}/health`
-    );
-  });
+  try {
+    await prisma.$connect();
+    console.log("Prisma connected");
 
-  socketServer = startSocketServer(server);
+    await redisClient.connect();
+
+    server.listen(config.server.port, () => {
+      console.log(
+        `🚀 Server running on http://localhost:${config.server.port}`
+      );
+      console.log(
+        `🩺 Health check: http://localhost:${config.server.port}/health`
+      );
+    });
+
+    socketServer = startSocketServer(server);
+  } catch (err) {
+    console.error("Failed to start server:", err);
+    process.exit(1);
+  }
 };
 
-export const shutdown = (signal: string) => {
+export const shutdown = async (signal: string) => {
   console.log(`\n${signal} received. Shutting down gracefully...`);
+
+  try {
+    await prisma.$disconnect();
+    console.log("Prisma disconnected");
+
+    if (redisClient.isOpen) await redisClient.disconnect();
+    console.log("Redis disconnected");
+  } catch (err) {
+    console.error("Error during shutdown:", err);
+  }
+
   server.close(() => {
     console.log("HTTP server closed");
     if (socketServer && typeof socketServer.close === "function") {
@@ -56,6 +81,7 @@ export const shutdown = (signal: string) => {
     process.exit(0);
   });
 
+  // Force shutdown after 10s
   setTimeout(() => {
     console.warn(
       `Grace period expired. Forcing close of ${sockets.size} remaining connection(s).`
