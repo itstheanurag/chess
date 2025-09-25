@@ -1,14 +1,14 @@
 import { create } from "zustand";
 import { Chess, Square, Move } from "chess.js";
 import { normalizeBoard } from "@/utils";
-import { GameState } from "@/types";
+import { Game } from "@/types";
 import { connectSocket } from "@/lib";
 
 function generatePlayerName() {
   return `Player-${Math.floor(Math.random() * 9000 + 1000)}`;
 }
 
-export const useGameStore = create<GameState>((set, get) => {
+export const useGameStore = create<Game>((set, get) => {
   const chess = new Chess();
   const gameSocket = connectSocket({ namespace: "game" }); // connect only game socket
 

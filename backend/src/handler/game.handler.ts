@@ -4,7 +4,7 @@ import { Square } from "chess.js";
 import { sendResponse, sendError } from "@/utils/helper";
 import { AuthenticatedRequest } from "@/types";
 import prisma from "@/libs/db";
-import { createGameSchema } from "@/schema/game";
+import { createGameSchema, GameStatus, GameType } from "@/schema/game";
 
 export const createGame = async (req: AuthenticatedRequest, res: Response) => {
   try {
@@ -17,11 +17,11 @@ export const createGame = async (req: AuthenticatedRequest, res: Response) => {
 
     const { type, passcode } = result.data;
 
-    if (type === "PRIVATE" && !passcode) {
-      return sendError(res, 400, "Passcode is required for private games");
-    }
+    // if (type === GameType.PRIVATE && !passcode) {
+    //   return sendError(res, 400, "Passcode is required for private games");
+    // }
 
-    if (type === "PUBLIC" && passcode) {
+    if (type === GameType.PUBLIC && passcode) {
       return sendError(res, 400, "Passcode is not allowed for public games");
     }
 
@@ -31,10 +31,10 @@ export const createGame = async (req: AuthenticatedRequest, res: Response) => {
       data: {
         whitePlayerId: BigInt(userId),
         blackPlayerId: null,
-        status: "WAITING",
-        type: type || "PUBLIC",
-        passcode: type === "PRIVATE" ? passcode : null,
-        isVisible: type === "PUBLIC",
+        status: GameStatus.WAITING,
+        type: type || GameType.PUBLIC,
+        passcode: type === GameType.PRIVATE ? passcode : null,
+        isVisible: type === GameType.PUBLIC,
         fen: initialFen,
         startedAt: null,
       },
@@ -54,7 +54,8 @@ export const createGame = async (req: AuthenticatedRequest, res: Response) => {
 
 export const joinGame = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const { passcode, gameId } = req.body;
+    const { passcode } = req.body;
+    const { gameId } = req.params;
     const userId = BigInt(req.user!.id);
 
     const game = await prisma.game.findUnique({
@@ -67,7 +68,7 @@ export const joinGame = async (req: AuthenticatedRequest, res: Response) => {
       return sendError(res, 400, "You are already part of this game");
     }
 
-    if (game.type === "PRIVATE") {
+    if (game.type === GameType.PRIVATE) {
       if (!passcode) {
         return sendError(res, 400, "Passcode is required to join this game");
       }
@@ -115,14 +116,6 @@ export const getGame = async (req: Request, res: Response) => {
     if (!game) return sendError(res, 404, "Game not found");
 
     const chess = new ChessGame(game.fen);
-    // for (const move of game.moves) {
-    //   chess.makeMove({
-    //     from: move.fromSquare as Square,
-    //     to: move.toSquare as Square,
-    //     promotion: move.promotion || undefined,
-    //   });
-    // }
-
     return sendResponse(
       res,
       200,

@@ -39,7 +39,7 @@ export interface GameStateData {
   [key: string]: unknown;
 }
 
-export interface GameState {
+export interface Game {
   gameState: GameStateData | null;
   selected: Square | null;
   validMoves: Move[];
@@ -52,4 +52,37 @@ export interface GameState {
   selectPiece: (square: Square) => void;
   clearSelection: () => void;
   resetGame: () => void;
+}
+
+export enum GameType {
+  PUBLIC = "PUBLIC",
+  PRIVATE = "PRIVATE",
+}
+
+export enum GameStatus {
+  WAITING = "WAITING",
+  ONGOING = "ONGOING",
+  FINISHED = "FINISHED",
+}
+
+export interface Player {
+  id: string;
+  name: string;
+  color?: "w" | "b";
+}
+
+export interface CreateGameData {
+  type: GameType;
+  name: string;
+  note: string;
+}
+
+export interface JoinGameData {
+  gameId: string, 
+  passcode: string;
+}
+
+export interface SearchGame {
+  type: GameType;
+  status: GameStatus;
 }

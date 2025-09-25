@@ -1,11 +1,5 @@
 import { Router } from "express";
-import {
-  createGame,
-  getGame,
-  makeMove,
-  getValidMoves,
-  listGames,
-} from "@/handler";
+import { createGame, getGame, listGames, joinGame } from "@/handler";
 import { authGuard } from "@/middlewares";
 
 const GameRouter: Router = Router();
@@ -36,25 +30,17 @@ GameRouter.use(authGuard);
 GameRouter.post("/", createGame);
 
 /**
+ * @route   POST /api/games
+ * @desc    Join a game
+ * @access  Private
+ */
+GameRouter.post("/:gameId/join", joinGame);
+/**
  * @route   GET /api/games/:gameId
  * @desc    Get game state
  * @access  Private
  */
 GameRouter.get("/:gameId", getGame);
-
-/**
- * @route   POST /api/games/:gameId/move
- * @desc    Make a move in the game
- * @access  Private
- */
-GameRouter.post("/:gameId/move", makeMove);
-
-/**
- * @route   GET /api/games/:gameId/moves
- * @desc    Get valid moves for a piece
- * @access  Private
- */
-GameRouter.get("/:gameId/moves", getValidMoves);
 
 // Export the router as default
 export default GameRouter;
