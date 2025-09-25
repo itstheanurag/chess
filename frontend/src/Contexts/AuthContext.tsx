@@ -1,22 +1,17 @@
 import { createContext, useContext, useState, type ReactNode } from "react";
 
-// Your AuthUser type
 interface AuthUser {
   id: string;
   name: string;
 }
 
-// Define the context type
 interface AuthContextType {
   authUser: AuthUser | null;
   login: (user: AuthUser) => void;
   logout: () => void;
 }
-
-// ✅ Provide the full type instead of just `null`
 const AuthContext = createContext<AuthContextType | null>(null);
 
-// Custom hook to use the AuthContext safely
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
@@ -25,7 +20,6 @@ export const useAuth = () => {
   return context;
 };
 
-// AuthProvider with typed children
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [authUser, setAuthUser] = useState<AuthUser | null>(null);
 
