@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from "react";
 import type { Piece } from "@/types/chess";
-import { useSockets } from "@/Contexts/SocketContext";
 import { convertToSquare } from "@/utils";
 import Square from "./Square";
-
+import { useGameStore } from "@/stores";
 type ChessBoardProps = { board: (Piece | null)[][] };
 
 const ChessBoard: React.FC<ChessBoardProps> = ({ board: initialBoard }) => {
@@ -15,7 +14,7 @@ const ChessBoard: React.FC<ChessBoardProps> = ({ board: initialBoard }) => {
     makeMove,
     clearSelection,
     playerName,
-  } = useSockets();
+  } = useGameStore();
 
   const [board, setBoard] = useState(initialBoard);
 
@@ -23,23 +22,19 @@ const ChessBoard: React.FC<ChessBoardProps> = ({ board: initialBoard }) => {
     if (gameState?.board) setBoard(gameState.board);
   }, [gameState]);
 
-  const getPieceAt = (
-    board: (Piece | null)[][],
-    r: number,
-    c: number
-  ): Piece | null => {
+  const getPieceAt = (board: (Piece | null)[][], r: number, c: number) => {
     if (!board || !board[r]) return null;
     return board[r][c] ?? null;
   };
 
   const handleSquareClick = (r: number, c: number) => {
+    if (!gameState?.board) return;
     const square = convertToSquare(r, c);
     const piece = getPieceAt(gameState.board, r, c);
 
     if (selected) {
-      console.log("making move", selected, "→", square);
-      makeMove(playerName, { from: selected, to: square });
-      clearSelection?.();
+      makeMove({ from: selected, to: square });
+      clearSelection();
     } else if (piece) {
       selectPiece(square);
     }
