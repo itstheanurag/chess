@@ -2,12 +2,16 @@ import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Home from "./components/Home/Home";
 import Game from "./components/pages/chess/Game";
+import Login from "./components/pages/auth/Login";
+import Register from "./components/pages/auth/SignUp";
 
 const App: React.FC = () => {
   return (
     <Router>
       <Routes>
         <Route path="/" element={<Home />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
         <Route path="/chess" element={<Game />} />
       </Routes>
     </Router>
