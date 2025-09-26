@@ -45,8 +45,11 @@ export interface Game {
   validMoves: Move[];
   isJoined: boolean;
   room: string | null;
-  playerColor: PieceColor;
+  playerColor: PieceColor | null;
   playerName: string;
+
+  connect: () => void;
+  disconnect: () => void;
   joinGame: (room: string, playerName?: string, isSpectator?: boolean) => void;
   makeMove: (move: { from: Square; to: Square; promotion?: string }) => void;
   selectPiece: (square: Square) => void;

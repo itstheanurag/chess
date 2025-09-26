@@ -12,6 +12,7 @@ export interface ChatState {
   isConnected: boolean;
   messages: ChatMessage[];
   connect: () => void;
+  disconnect: () => void;
   joinRoom: (roomId: string) => void;
   leaveRoom: (roomId: string) => void;
   sendMessage: (roomId: string, message: string) => void;

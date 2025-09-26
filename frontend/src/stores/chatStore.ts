@@ -2,53 +2,71 @@ import { ChatState, ChatMessage } from "@/types";
 import { create } from "zustand";
 import { connectSocket, NamedSocket } from "@/lib";
 
-export const useChatStore = create<ChatState>((set, get) => ({
-  socket: null,
-  isConnected: false,
-  messages: [],
+export const useChatStore = create<ChatState>((set, get) => {
+  let chatSocket: NamedSocket | null = null;
 
-  connect: () => {
-    if (get().socket) return;
+  const initializeSocket = () => {
+    if (chatSocket) return;
 
-    const socket: NamedSocket = connectSocket({ namespace: "chat" });
+    chatSocket = connectSocket({ namespace: "chat" });
 
-    socket.on("connect", () => {
+    chatSocket.on("connect", () => {
       set({ isConnected: true });
-      console.log("Connected to chat socket", socket.id);
+      console.log("Connected to chat socket", chatSocket?.id);
     });
 
-    socket.on("disconnect", () => {
+    chatSocket.on("disconnect", () => {
       set({ isConnected: false, socket: null });
       console.log("Disconnected from chat socket");
+      chatSocket = null;
     });
 
-    socket.on("message", (msg: ChatMessage) => {
+    chatSocket.on("message", (msg: ChatMessage) => {
       get().addMessage(msg);
     });
 
-    set({ socket });
-  },
+    set({ socket: chatSocket });
+  };
 
-  joinRoom: (roomId: string) => {
-    const { socket } = get();
-    if (!socket) return;
-    socket.emit("joinRoom", { roomId });
-  },
+  return {
+    socket: null,
+    isConnected: false,
+    messages: [],
 
-  leaveRoom: (roomId: string) => {
-    const { socket } = get();
-    if (!socket) return;
-    socket.emit("leaveRoom", { roomId });
-    set({ messages: [] });
-  },
+    connect: () => initializeSocket(),
 
-  sendMessage: (roomId: string, message: string) => {
-    const { socket } = get();
-    if (!socket) return;
-    socket.emit("sendMessage", { roomId, message });
-  },
+    disconnect: () => {
+      if (chatSocket) {
+        chatSocket.disconnect();
+        chatSocket = null;
+      }
+      set({ socket: null, isConnected: false, messages: [] });
+      console.log("Chat socket disconnected manually");
+    },
 
-  addMessage: (msg: ChatMessage) => {
-    set((state) => ({ messages: [...state.messages, msg] }));
-  },
-}));
+    joinRoom: (roomId: string) => {
+      get().connect();
+      if (!chatSocket) return;
+
+      chatSocket.emit("joinRoom", { roomId });
+    },
+
+    leaveRoom: (roomId: string) => {
+      if (!chatSocket) return;
+
+      chatSocket.emit("leaveRoom", { roomId });
+      set({ messages: [] });
+    },
+
+    sendMessage: (roomId: string, message: string) => {
+      get().connect();
+      if (!chatSocket) return;
+
+      chatSocket.emit("sendMessage", { roomId, message });
+    },
+
+    addMessage: (msg: ChatMessage) => {
+      set((state) => ({ messages: [...state.messages, msg] }));
+    },
+  };
+});
