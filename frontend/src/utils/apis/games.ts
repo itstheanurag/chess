@@ -13,7 +13,6 @@ export const listGames = async (
   }
 };
 
-
 export const createGame = async (
   data: CreateGameData
 ): Promise<Game | null> => {
@@ -25,7 +24,6 @@ export const createGame = async (
     return null;
   }
 };
-
 
 export const joinGame = async (data: JoinGameData): Promise<Game | null> => {
   try {
@@ -39,7 +37,6 @@ export const joinGame = async (data: JoinGameData): Promise<Game | null> => {
     return null;
   }
 };
-
 
 export const getGame = async (gameId: string): Promise<Game | null> => {
   try {

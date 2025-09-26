@@ -78,7 +78,7 @@ export interface CreateGameData {
 }
 
 export interface JoinGameData {
-  gameId: string, 
+  gameId: string;
   passcode: string;
 }
 

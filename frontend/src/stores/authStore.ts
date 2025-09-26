@@ -1,32 +1,64 @@
 import { create } from "zustand";
-import { AuthState, RegisterData, LoginData } from "@/types";
+import { AuthState, AuthUser, RegisterData, LoginData } from "@/types";
 import { getUser, logoutUser, loginUser, registerUser } from "@/utils";
 
-export const useAuthStore = create<AuthState>((set) => ({
+export const useAuthStore = create<AuthState>((set, get) => ({
   authUser:
-    typeof window !== "undefined" ? JSON.parse(getUser() || "null") : null,
+    typeof window !== "undefined"
+      ? (JSON.parse(getUser() || "null") as AuthUser | null)
+      : null,
 
-  register: async (data: RegisterData) => {
+  username: "",
+  email: "",
+  password: "",
+  isLoading: false,
+
+  setField: (field, value) =>
+    set((state) => ({
+      ...state,
+      [field]: value,
+    })),
+  resetFields: () =>
+    set({ username: "", email: "", password: "", isLoading: false }),
+
+  register: async (data?: RegisterData) => {
+    set({ isLoading: true });
     try {
-      const result = await registerUser(data);
+      const state: RegisterData = data ?? {
+        username: get().username,
+        email: get().email,
+        password: get().password,
+      };
+
+      const result = await registerUser(state);
       if (!result) return;
 
       set({ authUser: result.user });
       console.log("Registered user:", result.user);
     } catch (err) {
       console.error("Register error in store:", err);
+    } finally {
+      set({ isLoading: false });
     }
   },
 
-  login: async (data: LoginData) => {
+  login: async (data?: LoginData) => {
+    set({ isLoading: true });
     try {
-      const result = await loginUser(data);
+      const state: LoginData = data ?? {
+        email: get().email,
+        password: get().password,
+      };
+
+      const result = await loginUser(state);
       if (!result) return;
 
       set({ authUser: result.user });
       console.log("Logged in user:", result.user);
     } catch (err) {
       console.error("Login error in store:", err);
+    } finally {
+      set({ isLoading: false });
     }
   },
 

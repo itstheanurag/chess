@@ -17,7 +17,13 @@ export interface AuthUser {
 
 export interface AuthState {
   authUser: AuthUser | null;
-  register: (data: RegisterData) => void;
-  login: (data: LoginData) => void;
-  logout: () => void;
+  username: string;
+  email: string;
+  password: string;
+  isLoading: boolean;
+  setField: (field: "username" | "email" | "password", value: string) => void;
+  resetFields: () => void;
+  register: (data?: RegisterData) => Promise<void>;
+  login: (data?: LoginData) => Promise<void>;
+  logout: () => Promise<void>;
 }

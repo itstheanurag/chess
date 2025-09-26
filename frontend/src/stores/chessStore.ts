@@ -10,7 +10,7 @@ function generatePlayerName() {
 
 export const useGameStore = create<Game>((set, get) => {
   const chess = new Chess();
-  const gameSocket = connectSocket({ namespace: "game" }); // connect only game socket
+  const gameSocket = connectSocket({ namespace: "game" });
 
   gameSocket.on("gameJoined", ({ gameState, playerColor, roomId }) => {
     const board = normalizeBoard(gameState.board);

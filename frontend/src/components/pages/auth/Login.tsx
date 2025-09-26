@@ -1,24 +1,21 @@
-import { useState } from "react";
 import { Eye, EyeOff, Mail, Lock, User, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useAuthStore } from "@/stores";
+import { useState } from "react";
 
 const Login = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const { email, password, isLoading, setField, login } = useAuthStore();
+  const [showPassword, setShowPassword] = useState(false);
+
+  const isEmailValid = /\S+@\S+\.\S+/.test(email);
+  const isPasswordValid = password.length >= 6;
+  const isFormValid = isEmailValid && isPasswordValid;
 
   const handleSubmit = async (e: React.FormEvent) => {
-    if (e && e.preventDefault) e.preventDefault();
-    if (!email || !password) return;
-
-    setIsLoading(true);
-
-    setTimeout(() => {
-      console.log("Login:", { email, password });
-      setIsLoading(false);
-    }, 1000);
+    e.preventDefault();
+    if (!isFormValid) return;
+    await login();
   };
 
   return (
@@ -42,6 +39,7 @@ const Login = () => {
         </div>
 
         <form className="space-y-6" onSubmit={handleSubmit}>
+          {/* Email */}
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <Mail className="h-5 w-5 text-gray-400" />
@@ -50,11 +48,15 @@ const Login = () => {
               type="email"
               placeholder="Email address"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => setField("email", e.target.value)}
               className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-700 focus:border-transparent transition-all duration-200"
             />
+            {!isEmailValid && email.length > 0 && (
+              <p className="text-red-500 text-sm mt-1">Enter a valid email.</p>
+            )}
           </div>
 
+          {/* Password */}
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <Lock className="h-5 w-5 text-gray-400" />
@@ -63,7 +65,7 @@ const Login = () => {
               type={showPassword ? "text" : "password"}
               placeholder="Password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(e) => setField("password", e.target.value)}
               className="w-full pl-10 pr-12 py-3 bg-gray-50 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-700 focus:border-transparent transition-all duration-200"
             />
             <button
@@ -77,17 +79,24 @@ const Login = () => {
                 <Eye className="h-5 w-5" />
               )}
             </button>
+            {!isPasswordValid && password.length > 0 && (
+              <p className="text-red-500 text-sm mt-1">
+                Password must be at least 6 characters.
+              </p>
+            )}
           </div>
 
+          {/* Sign In Button */}
           <button
             type="submit"
-            disabled={isLoading}
+            disabled={!isFormValid || isLoading}
             className="w-full py-3 px-4 bg-gray-900 text-white font-semibold rounded-lg shadow hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-gray-700 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoading ? "Signing In..." : "Sign In"}
           </button>
         </form>
 
+        {/* Sign up link */}
         <div className="mt-6 text-center">
           <p className="text-gray-600">
             Don't have an account?{" "}
@@ -105,4 +114,3 @@ const Login = () => {
 };
 
 export default Login;
-  
