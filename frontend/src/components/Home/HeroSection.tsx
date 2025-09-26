@@ -1,4 +1,3 @@
-// src/components/HeroSection.tsx
 import React from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -6,12 +5,11 @@ const HeroSection: React.FC = () => {
   const navigate = useNavigate();
 
   const handleGetStarted = () => {
-    navigate("/chess"); // Navigate to chess board page
+    navigate("/login");
   };
 
   return (
     <section className="relative flex flex-col items-center justify-center w-full h-screen overflow-hidden bg-neutral-900 text-white">
-      {/* Animated chessboard background */}
       <div className="absolute inset-0 grid grid-cols-8 grid-rows-8 opacity-20">
         {Array.from({ length: 64 }).map((_, i) => (
           <div
@@ -29,10 +27,8 @@ const HeroSection: React.FC = () => {
         ))}
       </div>
 
-      {/* Gradient overlay */}
       <div className="absolute inset-0 bg-gradient-to-b from-neutral-900/10 via-neutral-900/30 to-neutral-900/70"></div>
 
-      {/* Foreground content */}
       <div className="relative z-10 text-center px-4">
         <h1 className="text-5xl md:text-6xl font-bold mb-4">
           Play Chess Online
