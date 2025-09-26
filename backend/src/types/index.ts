@@ -1,3 +1,3 @@
 export * from "./chess";
 export * from "./game";
-export * from "./token";
+export * from "../utils/token";

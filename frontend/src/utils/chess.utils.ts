@@ -1,22 +1,30 @@
-// chessUtils.ts
-import { PieceType, Piece } from "@/types/chess";
+import { PieceType, Piece, Game, GameStateData } from "@/types/chess";
 import { Chess, PieceSymbol } from "chess.js";
 
 export const getInitialBoard = (): (Piece | null)[][] => {
   const chess = new Chess();
   const rawBoard = chess.board();
-
   return rawBoard.map((row) =>
     row.map((piece) =>
       piece
         ? {
             type: convertPieceType(piece.type),
-            color: piece.color === "w" ? "white" : "black",
+            color: piece.color,
           }
         : null
     )
   );
 };
+
+export function normalizeBoard(
+  boardData: ReturnType<Chess["board"]>
+): (Piece | null)[][] {
+  return boardData.map((row) =>
+    row.map((p) =>
+      p ? { type: convertPieceType(p.type), color: p.color as "w" | "b" } : null
+    )
+  );
+}
 
 const convertPieceType = (symbol: PieceSymbol): PieceType => {
   switch (symbol) {
@@ -32,27 +40,32 @@ const convertPieceType = (symbol: PieceSymbol): PieceType => {
       return "queen";
     case "k":
       return "king";
+    default:
+      throw new Error(`Unknown piece type: ${symbol}`);
   }
 };
 
-export function normalizeBoard(
-  boardData: (Piece | null)[][]
-): (Piece | null)[][] {
-  if (Array.isArray(boardData) && Array.isArray(boardData[0])) {
-    return boardData;
-  }
+export function mapBackendGameToGameState(game: Game): GameStateData {
+  const chess = new Chess(game.fen);
 
-  const emptyBoard: (Piece | null)[][] = Array.from({ length: 8 }, () =>
-    Array(8).fill(null)
-  );
-
-  boardData.forEach((row, rIdx) => {
-    row.forEach((piece, cIdx) => {
-      if (piece) {
-        emptyBoard[rIdx][cIdx] = piece;
-      }
-    });
-  });
-
-  return emptyBoard;
+  return {
+    fen: game.fen,
+    board: normalizeBoard(chess.board()),
+    turn: chess.turn() as "w" | "b",
+    status: game.status,
+    result: game.result,
+    moves: game.moves.map((m) => ({
+      id: m.id,
+      fromSquare: m.fromSquare,
+      toSquare: m.toSquare,
+      promotion: m.promotion,
+      fen: m.fen,
+      playerId: m.playerId,
+      createdAt: m.createdAt,
+    })),
+    spectators: game.spectators,
+    whitePlayer: game.whitePlayer,
+    blackPlayer: game.blackPlayer,
+    type: game.type,
+  };
 }

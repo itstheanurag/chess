@@ -1,4 +1,10 @@
-import { Move, Color, PieceSymbol, Piece } from "chess.js";
+import { GameMove, GameSpectator, User } from "@prisma/client";
+import { Color, Piece } from "chess.js";
+
+export enum GameType {
+  PUBLIC = "PUBLIC",
+  PRIVATE = "PRIVATE",
+}
 
 export type GameStatus =
   | "active"
@@ -27,4 +33,23 @@ export interface GameState {
   whitePlayer?: string;
   blackPlayer?: string;
   spectators: string[];
+}
+
+export interface Game {
+  id: bigint;
+  whitePlayerId?: bigint | null;
+  blackPlayerId?: bigint | null;
+  status: string;
+  result?: string | null;
+  type: GameType;
+  passcode?: string | null;
+  isVisible: boolean;
+  fen: string;
+  startedAt?: Date | null;
+  endedAt?: Date | null;
+  createdAt: Date;
+  whitePlayer?: User | null;
+  blackPlayer?: User | null;
+  moves: GameMove[];
+  spectators: GameSpectator[];
 }

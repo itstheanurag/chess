@@ -1,14 +1,22 @@
 import { create } from "zustand";
 import { Chess, Square, Move } from "chess.js";
-import { normalizeBoard } from "@/utils";
-import { Game } from "@/types";
+import {
+  createGame,
+  joinGame,
+  listGames,
+  mapBackendGameToGameState,
+  normalizeBoard,
+} from "@/utils";
+import {
+  CreateGameData,
+  GameContext,
+  GameType,
+  JoinGameData,
+  SearchGame,
+} from "@/types";
 import { connectSocket, NamedSocket } from "@/lib";
 
-function generatePlayerName() {
-  return `Player-${Math.floor(Math.random() * 9000 + 1000)}`;
-}
-
-export const useGameStore = create<Game>((set, get) => {
+export const useGameStore = create<GameContext>((set, get) => {
   const chess = new Chess();
 
   let gameSocket: NamedSocket | null = null;
@@ -65,22 +73,11 @@ export const useGameStore = create<Game>((set, get) => {
     isJoined: false,
     room: null,
     playerColor: null,
-    playerName: generatePlayerName(),
+    playerName: "",
+    gameName: "",
+    gameType: GameType.PUBLIC,
 
-    // **Manual connection**
     connect: () => initializeSocket(),
-
-    joinGame: (
-      room: string,
-      playerName = generatePlayerName(),
-      isSpectator = false
-    ) => {
-      get().connect();
-      if (!gameSocket) return;
-
-      set({ playerName });
-      gameSocket.emit("joinGame", { room, playerName, isSpectator });
-    },
 
     selectPiece: (square: Square) => {
       const moves = chess.moves({ square, verbose: true }) as Move[];
@@ -126,6 +123,32 @@ export const useGameStore = create<Game>((set, get) => {
         selected: null,
         validMoves: [],
       });
+    },
+
+    createGame: async (data: CreateGameData) => {
+      const game = await createGame(data);
+      if (game)
+        set({
+          gameState: mapBackendGameToGameState(game),
+          room: game.id.toString(),
+          gameType: game.type,
+        });
+    },
+
+    listGames: async (filters: SearchGame) => {
+      const games = await listGames(filters);
+      return games;
+    },
+
+    joinGame: async (data: JoinGameData) => {
+      const game = await joinGame(data);
+
+      if (game)
+        set({
+          gameState: mapBackendGameToGameState(game),
+          room: game.id.toString(),
+          gameType: game.type,
+        });
     },
   };
 });

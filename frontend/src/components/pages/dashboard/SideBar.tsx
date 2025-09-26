@@ -1,8 +1,7 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   Settings,
   LogOut,
-  X,
   Activity,
   Clock,
   Gamepad2,
@@ -14,12 +13,15 @@ import {
 import AuthUser from "../auth/User";
 import { useAuthStore, useUIStore } from "@/stores";
 
-const Sidebar: React.FC = () => {
+interface SidebarProps {
+  isDrawerOpen: boolean;
+  toggleDrawer: () => void;
+}
+
+const Sidebar: React.FC<SidebarProps> = ({ isDrawerOpen, toggleDrawer }) => {
   const { logout } = useAuthStore();
   const { activeSection, setActiveSection, collapsed, toggleCollapse } =
     useUIStore();
-  const [isDrawerOpen, setIsDrawerOpen] = useState(true);
-  const toggleDrawer = () => setIsDrawerOpen(!isDrawerOpen);
 
   const menuItems = [
     { id: "dashboard", icon: Activity, label: "Dashboard" },
@@ -64,14 +66,12 @@ const Sidebar: React.FC = () => {
             onClick={toggleCollapse}
             className={`${
               collapsed ? "" : "ml-auto"
-            }  p-1 rounded hover:bg-neutral-100 hidden lg:block
-            `}
+            } p-3 rounded hover:bg-neutral-100 hidden lg:block`}
           >
             {collapsed ? "→" : "←"}
           </button>
         </div>
 
-        {/* Scrollable Middle Content */}
         <div className="flex-1 overflow-y-auto">
           <nav className="p-2 md:p-0">
             <ul className="space-y-2">
@@ -81,7 +81,10 @@ const Sidebar: React.FC = () => {
                 return (
                   <li key={item.id}>
                     <button
-                      onClick={() => setActiveSection(item.id)}
+                      onClick={() => {
+                        setActiveSection(item.id);
+                        toggleDrawer(); // close drawer after selection
+                      }}
                       className={`
                         flex items-center justify-center lg:justify-start
                         w-full p-3 lg:px-4 rounded-lg transition-colors

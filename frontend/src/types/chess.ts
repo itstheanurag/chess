@@ -1,4 +1,5 @@
 import { Move, Square } from "chess.js";
+import { AuthUser } from "./auth";
 
 export type PieceType =
   | "pawn"
@@ -39,7 +40,50 @@ export interface GameStateData {
   [key: string]: unknown;
 }
 
+export interface GameSpectator {
+  id: bigint;
+  gameId: bigint;
+  spectatorId: bigint;
+  joinedAt: Date;
+  game: Game;
+  spectator: AuthUser;
+}
+
+export interface GameMove {
+  id: bigint;
+  gameId: bigint;
+  moveNumber: number;
+  playerId?: bigint | null;
+  fromSquare: string;
+  toSquare: string;
+  promotion?: string | null;
+  fen: string;
+  createdAt: Date;
+
+  game: Game;
+  player?: AuthUser | null;
+}
+
 export interface Game {
+  id: bigint;
+  whitePlayerId?: bigint | null;
+  blackPlayerId?: bigint | null;
+  status: string;
+  result?: string | null;
+  type: GameType;
+  passcode?: string | null;
+  isVisible: boolean;
+  fen: string;
+  startedAt?: Date | null;
+  endedAt?: Date | null;
+  createdAt: Date;
+  whitePlayer?: AuthUser | null;
+  blackPlayer?: AuthUser | null;
+  moves: GameMove[];
+  spectators: GameSpectator[];
+}
+
+export interface GameContext {
   gameState: GameStateData | null;
   selected: Square | null;
   validMoves: Move[];
@@ -47,14 +91,18 @@ export interface Game {
   room: string | null;
   playerColor: PieceColor | null;
   playerName: string;
+  gameName: string;
+  gameType: string;
 
   connect: () => void;
   disconnect: () => void;
-  joinGame: (room: string, playerName?: string, isSpectator?: boolean) => void;
+  joinGame: (data: JoinGameData) => void;
   makeMove: (move: { from: Square; to: Square; promotion?: string }) => void;
   selectPiece: (square: Square) => void;
   clearSelection: () => void;
   resetGame: () => void;
+  createGame: (data: CreateGameData) => void;
+  listGames: (filters: SearchGame) => void;
 }
 
 export enum GameType {
@@ -62,11 +110,14 @@ export enum GameType {
   PRIVATE = "PRIVATE",
 }
 
-export enum GameStatus {
-  WAITING = "WAITING",
-  ONGOING = "ONGOING",
-  FINISHED = "FINISHED",
-}
+export type GameStatus =
+  | "active"
+  | "checkmate"
+  | "draw"
+  | "stalemate"
+  | "threefold"
+  | "insufficient"
+  | "50move";
 
 export interface Player {
   id: string;
@@ -82,7 +133,8 @@ export interface CreateGameData {
 
 export interface JoinGameData {
   gameId: string;
-  passcode: string;
+  passcode?: string;
+  isSpectator?: boolean;
 }
 
 export interface SearchGame {

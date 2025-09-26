@@ -34,6 +34,6 @@ export const joinGameSchema = z.object({
 });
 
 export const searchGamesSchema = z.object({
-  type: z.nativeEnum(GameType).default(GameType.PUBLIC),
-  status: z.nativeEnum(GameStatus),
+  type: z.enum(GameType).default(GameType.PUBLIC),
+  status: z.enum(GameStatus),
 });

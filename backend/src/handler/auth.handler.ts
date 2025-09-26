@@ -2,10 +2,10 @@ import type { Request, Response } from "express";
 import { redisClient, REDIS_KEYS } from "@/libs";
 import { generateToken, generateAccessToken } from "@/utils/jwt";
 import { registerSchema, loginSchema } from "@/schema";
-import { AuthenticatedRequest } from "@/types/token";
 import { sendError, sendResponse } from "@/utils/helper";
 import prisma from "@/libs/db";
 import { comparePassword, hashPassword } from "@/utils";
+import { AuthenticatedRequest } from "@/types";
 
 export const register = async (
   req: Request,

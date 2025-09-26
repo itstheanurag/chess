@@ -9,7 +9,7 @@ interface UIStore {
 
 export const useUIStore = create<UIStore>((set) => ({
   activeSection: "dashboard",
-  collapsed: false,
+  collapsed: true,
   setActiveSection: (section) => set({ activeSection: section }),
   toggleCollapse: () => set((state) => ({ collapsed: !state.collapsed })),
 }));
