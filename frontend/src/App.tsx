@@ -9,12 +9,11 @@ import {
 import { ToastContainer } from "react-toastify";
 import { AnimatePresence, motion, easeInOut } from "framer-motion";
 import "react-toastify/dist/ReactToastify.css";
-
 import Home from "./components/Home/Home";
-import Game from "./components/pages/chess/Game";
 import Login from "./components/pages/auth/Login";
 import Register from "./components/pages/auth/SignUp";
 import { useAuthStore } from "./stores";
+import DashboardLayout from "./components/pages/dashboard/Layout";
 
 interface ProtectedRouteProps {
   children: React.ReactElement;
@@ -22,7 +21,6 @@ interface ProtectedRouteProps {
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const { authUser } = useAuthStore();
-  console.log(authUser);
   if (!authUser) return <Navigate to="/login" replace />;
   return children;
 };
@@ -31,7 +29,7 @@ const PublicRoute: React.FC<{ children: React.ReactElement }> = ({
   children,
 }) => {
   const { authUser } = useAuthStore();
-  if (authUser) return <Navigate to="/chess" replace />;
+  if (authUser) return <Navigate to="/dashboard" replace />;
   return children;
 };
 
@@ -96,7 +94,7 @@ const AnimatedRoutes: React.FC = () => {
         />
 
         <Route
-          path="/chess"
+          path="/dashboard"
           element={
             <ProtectedRoute>
               <motion.div
@@ -106,7 +104,7 @@ const AnimatedRoutes: React.FC = () => {
                 exit="exit"
                 transition={{ duration: 0.35, ease: easeInOut }}
               >
-                <Game />
+                <DashboardLayout />
               </motion.div>
             </ProtectedRoute>
           }

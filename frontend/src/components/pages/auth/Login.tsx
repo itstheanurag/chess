@@ -8,7 +8,9 @@ import Button from "@/components/ui/buttons/SubmitButton";
 
 const Login = () => {
   const navigate = useNavigate();
-  const { email, password, isLoading, setField, login } = useAuthStore();
+  const { email, password, isLoading, setField, login, authUser } =
+    useAuthStore();
+
   const [showPassword, setShowPassword] = useState(false);
 
   const isEmailValid = /\S+@\S+\.\S+/.test(email);
@@ -19,8 +21,7 @@ const Login = () => {
     e.preventDefault();
     if (!isFormValid) return;
     await login();
-
-    navigate("/chess");
+    navigate("/dashboard");
   };
 
   return (
