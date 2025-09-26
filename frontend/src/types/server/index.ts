@@ -4,7 +4,7 @@ export interface Tokens {
 }
 
 export interface ServerResponse<T> {
-  status: boolean;
+  success: boolean;
   message: string;
   data?: T | null;
 }

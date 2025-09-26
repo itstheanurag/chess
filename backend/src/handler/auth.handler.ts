@@ -39,7 +39,7 @@ export const register = async (
     return sendResponse(
       res,
       201,
-      { user },
+      { ...user, id: user.id.toString() },
       "User registered successfully. Please login"
     );
   } catch (err) {
@@ -68,18 +68,13 @@ export const login = async (req: Request, res: Response): Promise<Response> => {
     if (!comparePassword(parsedData.password, user.passwordHash)) {
       return sendError(res, 400, "Invalid credentials");
     }
-
-    const tokens = await generateToken({
-      id: user.id as any,
-      email: user.email,
-      name: user.username,
-    });
-
     const userDetails = {
-      id: user.id,
+      id: user.id.toString(),
       name: user.username,
       email: user.email,
     };
+
+    const tokens = await generateToken(userDetails);
 
     return sendResponse(
       res,

@@ -4,20 +4,41 @@ import {
   Routes,
   Route,
   useLocation,
+  Navigate,
 } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
-import { AnimatePresence, easeIn, motion } from "framer-motion";
+import { AnimatePresence, motion, easeInOut } from "framer-motion";
 import "react-toastify/dist/ReactToastify.css";
 
 import Home from "./components/Home/Home";
 import Game from "./components/pages/chess/Game";
 import Login from "./components/pages/auth/Login";
 import Register from "./components/pages/auth/SignUp";
+import { useAuthStore } from "./stores";
+
+interface ProtectedRouteProps {
+  children: React.ReactElement;
+}
+
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
+  const { authUser } = useAuthStore();
+  console.log(authUser);
+  if (!authUser) return <Navigate to="/login" replace />;
+  return children;
+};
+
+const PublicRoute: React.FC<{ children: React.ReactElement }> = ({
+  children,
+}) => {
+  const { authUser } = useAuthStore();
+  if (authUser) return <Navigate to="/chess" replace />;
+  return children;
+};
 
 const pageVariants = {
-  initial: { opacity: 0, x: 50 },
-  animate: { opacity: 1, x: 0 },
-  exit: { opacity: 0, x: -50 },
+  initial: { opacity: 0, scale: 0.95 },
+  animate: { opacity: 1, scale: 1 },
+  exit: { opacity: 0, scale: 0.95 },
 };
 
 const AnimatedRoutes: React.FC = () => {
@@ -34,54 +55,64 @@ const AnimatedRoutes: React.FC = () => {
               initial="initial"
               animate="animate"
               exit="exit"
-              transition={{ duration: 0.3, ease: easeIn }}
+              transition={{ duration: 0.35, ease: easeInOut }}
             >
               <Home />
             </motion.div>
           }
         />
+
         <Route
           path="/login"
           element={
-            <motion.div
-              variants={pageVariants}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              transition={{ duration: 0.3 }}
-            >
-              <Login />
-            </motion.div>
+            <PublicRoute>
+              <motion.div
+                variants={pageVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                transition={{ duration: 0.35, ease: easeInOut }}
+              >
+                <Login />
+              </motion.div>
+            </PublicRoute>
           }
         />
         <Route
           path="/register"
           element={
-            <motion.div
-              variants={pageVariants}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              transition={{ duration: 0.3 }}
-            >
-              <Register />
-            </motion.div>
+            <PublicRoute>
+              <motion.div
+                variants={pageVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                transition={{ duration: 0.35, ease: easeInOut }}
+              >
+                <Register />
+              </motion.div>
+            </PublicRoute>
           }
         />
+
         <Route
           path="/chess"
           element={
-            <motion.div
-              variants={pageVariants}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              transition={{ duration: 0.3 }}
-            >
-              <Game />
-            </motion.div>
+            <ProtectedRoute>
+              <motion.div
+                variants={pageVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                transition={{ duration: 0.35, ease: easeInOut }}
+              >
+                <Game />
+              </motion.div>
+            </ProtectedRoute>
           }
         />
+
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </AnimatePresence>
   );

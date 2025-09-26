@@ -1,3 +1,5 @@
+import { AuthUser } from "@/types";
+
 type TokenType = "accessToken" | "refreshToken" | "emailVerificationToken";
 
 /**
@@ -14,7 +16,7 @@ export const getToken = (type: TokenType): string | null => {
  * @param type - The token type to save.
  * @param value - The token value to store.
  */
-export const saveToken = (key: string, token: string | null) => {
+export const saveToken = (key: TokenType, token: string | null) => {
   if (!token) {
     console.warn("Trying to save undefined token for", key);
     return;
@@ -32,18 +34,17 @@ export const removeToken = (type: TokenType): void => {
 export const flushLocalTokens = () => {
   removeToken("accessToken");
   removeToken("refreshToken");
-  removeToken("emailVerificationToken");
   removeUser();
 };
 
-export const saveUser = (user: unknown) => {
-  localStorage.setItem("user", JSON.stringify(user));
+export const saveUser = (user: AuthUser) => {
+  localStorage.setItem("authUser", JSON.stringify(user));
 };
 
 export const getUser = () => {
-  return localStorage.getItem("user");
+  return localStorage.getItem("authUser");
 };
 
 export const removeUser = () => {
-  localStorage.removeItem("user");
+  localStorage.removeItem("authUser");
 };

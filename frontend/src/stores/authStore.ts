@@ -30,11 +30,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         password: get().password,
       };
 
-      const result = await registerUser(state);
-      if (!result) return;
-
-      set({ authUser: result.user });
-      console.log("Registered user:", result.user);
+      await registerUser(state);
     } catch (err) {
       console.error("Register error in store:", err);
     } finally {
@@ -53,6 +49,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const result = await loginUser(state);
       if (!result) return;
 
+      console.log("result from the auth user ", result);
       set({ authUser: result.user });
       console.log("Logged in user:", result.user);
     } catch (err) {

@@ -1,79 +1,96 @@
 import api from "@/lib/axios";
 import { LoginData, AuthUser, RegisterData } from "@/types";
-import { removeToken, removeUser } from "../storage";
+import { removeToken, removeUser, saveToken, saveUser } from "../storage";
 import {
   Tokens,
   LoginResponseData,
   RegisterResponseData,
   ServerResponse,
 } from "@/types/server";
+import { error, success } from "../toast";
+import { handleError } from "../errors";
 
 export const loginUser = async (
   data: LoginData
 ): Promise<{ user: AuthUser; tokens: Tokens } | null> => {
   try {
     const response = await api.post<ServerResponse<LoginResponseData>>(
-      "/login",
-      JSON.stringify(data)
+      "/auth/login",
+      data
     );
 
-    if (!response.data.status || !response.data.data) {
-      console.error("Login failed");
+    if (response.status !== 200) {
+      console.error("Login failed: status code", response.status);
+      error("Login failed. Please try again.");
+      return null;
+    }
+
+    const responseData = response.data;
+
+    console.log(responseData);
+    if (!responseData.success) {
+      error(responseData.message || "Login failed");
+      return null;
+    }
+
+    const serverData = responseData.data;
+
+    if (!serverData || !serverData.tokens) {
+      error("Invalid server response");
       return null;
     }
 
     const user: AuthUser = {
-      id: response.data.data.id,
-      name: response.data.data.name,
-      email: response.data.data.email,
+      id: serverData.id!,
+      name: serverData.name!,
+      email: serverData.email!,
     };
 
-    const tokens = response.data.data.tokens;
+    const tokens: Tokens = {
+      accessToken: serverData.tokens.accessToken,
+      refreshToken: serverData.tokens.refreshToken,
+    };
+
+    saveUser(user);
+    saveToken("accessToken", tokens.accessToken);
+    saveToken("refreshToken", tokens.refreshToken);
+    success(responseData.message || "Logged in successfully");
 
     return { user, tokens };
-  } catch (error) {
-    console.error("Login error:", error);
-    return null;
+  } catch (err: unknown) {
+    console.log("errr ", err);
+    return handleError(err);
   }
 };
 
-export const registerUser = async (
-  data: RegisterData
-): Promise<{ user: AuthUser; tokens: Tokens } | null> => {
+export const registerUser = async (data: RegisterData): Promise<null> => {
   try {
     const response = await api.post<ServerResponse<RegisterResponseData>>(
-      "/register",
+      "/auth/register",
       JSON.stringify(data)
     );
 
-    if (!response.data.status || !response.data.data) {
+    if (!response.data.success || !response.data.data) {
       console.error("Registration failed");
+      error(response.data.message);
       return null;
     }
-
-    const user: AuthUser = {
-      id: response.data.data.id,
-      name: response.data.data.name,
-      email: response.data.data.email,
-    };
-
-    const tokens = response.data.data.tokens;
-
-    return { user, tokens };
-  } catch (error) {
-    console.error("Registration error:", error);
+    success(response.data.message);
+    return null;
+  } catch (err) {
+    console.error("Registration error:", err);
     return null;
   }
 };
 
 export const logoutUser = async () => {
   try {
-    await api.post("/logout");
+    await api.post("/auth/logout");
     removeUser();
     removeToken("accessToken");
     removeToken("refreshToken");
     console.log("Logged out successfully");
-  } catch (error) {
-    console.error("Logout error:", error);
+  } catch (err) {
+    console.error("Logout error:", err);
   }
 };

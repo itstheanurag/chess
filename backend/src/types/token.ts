@@ -7,7 +7,7 @@ export interface Tokens {
 }
 
 export interface JwtPayloadOptions extends JwtPayload {
-  id: number;
+  id: string;
   email: string;
   name: string;
 }
