@@ -18,6 +18,8 @@ const DashboardLayout = () => {
         return <ChessDashboard />;
       case "chess":
         return <ChessGamesPage />;
+      case "Game":
+        return <ChessGamesPage />;
       default:
         return <div>Coming soon...</div>;
     }
@@ -32,7 +34,6 @@ const DashboardLayout = () => {
           collapsed ? "lg:ml-20" : "lg:ml-80"
         } md:ml-0`}
       >
-        {/* Header */}
         <div className="sticky top-0 z-10 w-full bg-white border-b border-neutral-200 p-3 flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <button

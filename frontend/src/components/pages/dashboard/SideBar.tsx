@@ -50,13 +50,14 @@ const Sidebar: React.FC<SidebarProps> = ({ isDrawerOpen, toggleDrawer }) => {
           }
         `}
       >
-        <div className="flex items-center justify-between p-3 border-b border-neutral-200 lg:justify-start">
+        <div className=" hidden md:flex items-center justify-between p-3 border-b border-neutral-200 lg:justify-start">
           {!collapsed && (
-            <div className="hidden lg:block">
+            <div className="">
               <AuthUser />
             </div>
           )}
 
+          {/* Collapse toggle */}
           <button
             onClick={toggleCollapse}
             className={`${
@@ -107,7 +108,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isDrawerOpen, toggleDrawer }) => {
             </ul>
           </nav>
         </div>
-
         {/* Footer */}
         <div className="p-4 border-t border-neutral-200 flex flex-col space-y-2">
           <button className="w-full flex items-center justify-center lg:justify-start space-x-3 px-4 rounded-lg text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900 transition-colors">
