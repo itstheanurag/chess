@@ -102,57 +102,6 @@ export const userLogInCheck = async (
   }
 };
 
-export const searchUser = async (
-  req: AuthenticatedRequest,
-  res: Response
-): Promise<Response> => {
-  try {
-    const userId = req.user?.id;
-
-    if (!userId) {
-      return sendError(res, 400, "Not qualified to search");
-    }
-
-    const { q } = req.query;
-
-    if (!q || typeof q !== "string" || q.trim() === "") {
-      return sendError(res, 400, "Query parameter 'q' is required");
-    }
-
-    const query = q.trim();
-
-    const users = await prisma.user.findMany({
-      where: {
-        AND: [
-          {
-            OR: [
-              { username: { contains: query, mode: "insensitive" } },
-              { email: { contains: query, mode: "insensitive" } },
-            ],
-          },
-          { NOT: { id: BigInt(userId) } },
-        ],
-      },
-      select: {
-        id: true,
-        username: true,
-        email: true,
-      },
-      take: 20,
-    });
-
-    const formatted = users.map((u) => ({
-      id: u.id.toString(),
-      name: u.username,
-      email: u.email,
-    }));
-
-    return sendResponse(res, 200, formatted, "Users fetched successfully");
-  } catch (err) {
-    return sendError(res, 500, "Failed to search users");
-  }
-};
-
 export const refreshAccessToken = async (
   req: AuthenticatedRequest,
   res: Response
@@ -193,7 +142,6 @@ export const logout = async (
 
     return sendResponse(res, 200, null, "Logged out successfully");
   } catch (err) {
-    // console.error("Logout error:", err);
     return sendError(res, 500, "Failed to log out");
   }
 };

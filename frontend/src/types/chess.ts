@@ -103,10 +103,8 @@ export interface GameContext {
   selectPiece: (square: Square) => void;
   clearSelection: () => void;
   resetGame: () => void;
-  createGame: (data: {
-    passcode?: string;
-    blackPlayerId?: string;
-  }) => Promise<void>;
+  createGame: (data?: { passcode?: string; blackPlayerId?: string }) => void;
+
   listGames: (filters?: SearchGame) => Promise<void>;
   setGameName: (name: string) => void;
   setGameType: (type: GameType) => void;

@@ -135,35 +135,26 @@ export const useGameStore = create<GameContext>((set, get) => {
       });
     },
 
-    createGame: async ({
-      passcode,
-      blackPlayerId,
-    }: {
-      passcode: string;
-      blackPlayerId: string;
+    createGame: async (data?: {
+      passcode?: string;
+      blackPlayerId?: string;
     }) => {
-      const data: CreateGameData = {
+      const payload: CreateGameData = {
         type: get().gameType,
         gameName: get().gameName,
         note: get().notes,
-        passcode: passcode ?? "",
-        blackPlayerId: blackPlayerId ?? "",
+        passcode: data?.passcode ?? "",
+        blackPlayerId: data?.blackPlayerId ?? "",
       };
 
-      const serverResposne = createGame(data);
-
-      if (serverResposne.data) {
-        set({
-          gameState: mapBackendGameToGameState(game),
-          room: game.id.toString(),
-          gameType: game.type,
-        });
-      }
+      await createGame(payload);
     },
 
     listGames: async (filters?: SearchGame) => {
       const games = await listGames(filters);
-      return games;
+      if (games) {
+        set({ userGames: games });
+      }
     },
 
     joinGame: async (data: JoinGameData) => {

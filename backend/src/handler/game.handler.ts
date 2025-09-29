@@ -10,27 +10,35 @@ export const createGame = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const userId = BigInt(req.user!.id);
 
+    // Validate request body
     const result = createGameSchema.safeParse(req.body);
     if (!result.success) {
       return sendError(res, 400, "Invalid request", result.error);
     }
 
-    const { type, passcode } = result.data;
+    let { type, passcode, blackPlayerId } = result.data;
 
-    // if (type === GameType.PRIVATE && !passcode) {
-    //   return sendError(res, 400, "Passcode is required for private games");
-    // }
-
+    // Passcode rules
     if (type === GameType.PUBLIC && passcode) {
       return sendError(res, 400, "Passcode is not allowed for public games");
     }
 
+    if (type === GameType.PRIVATE && !passcode) {
+      // Generate random 6-digit passcode
+      passcode = Math.floor(100000 + Math.random() * 900000).toString();
+    }
+
+    // Parse blackPlayerId if provided
+    const blackId = blackPlayerId ? BigInt(blackPlayerId) : null;
+
     const chess = new ChessGame();
     const initialFen = chess.fen();
+
+    // Create game in DB
     const game = await prisma.game.create({
       data: {
-        whitePlayerId: BigInt(userId),
-        blackPlayerId: null,
+        whitePlayerId: userId,
+        blackPlayerId: blackId,
         status: GameStatus.WAITING,
         type: type || GameType.PUBLIC,
         passcode: type === GameType.PRIVATE ? passcode : null,

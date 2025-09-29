@@ -18,6 +18,8 @@ export const createGameSchema = z
     type: z.nativeEnum(GameType).default(GameType.PUBLIC),
     passcode: z.string().max(20).optional(),
     fen: z.string().optional(),
+    blackPlayerId: z.string().optional(),
+    notes: z.string().optional(),
   })
   .refine(
     (data) =>

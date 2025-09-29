@@ -1,11 +1,13 @@
 import { Router, Request, Response } from "express";
-import authRoutes from "./auth.route";
-import gameRoutes from "./game.route";
+import AuthRoutes from "./auth.route";
+import GameRoutes from "./game.route";
+import UserRoutes from "./user.route";
 
 const router: Router = Router();
 
-router.use("/api/auth", authRoutes);
-router.use("/api/games", gameRoutes);
+router.use("/api/auth", AuthRoutes);
+router.use("/api/games", GameRoutes);
+router.use("/api/users", UserRoutes);
 
 router.get("/health", (_req: Request, res: Response) => {
   return res.status(200).json({
