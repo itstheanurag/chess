@@ -92,8 +92,9 @@ export interface GameContext {
   playerColor: PieceColor | null;
   playerName: string;
   gameName: string;
-  gameType: string;
+  gameType: GameType;
   notes: string;
+  userGames: Game[];
 
   connect: () => void;
   disconnect: () => void;
@@ -102,9 +103,11 @@ export interface GameContext {
   selectPiece: (square: Square) => void;
   clearSelection: () => void;
   resetGame: () => void;
-  createGame: (data: CreateGameData) => void;
-  listGames: (filters: SearchGame) => void;
-
+  createGame: (data: {
+    passcode?: string;
+    blackPlayerId?: string;
+  }) => Promise<void>;
+  listGames: (filters?: SearchGame) => Promise<void>;
   setGameName: (name: string) => void;
   setGameType: (type: GameType) => void;
   setNotes: (notes: string) => void;
@@ -133,8 +136,10 @@ export interface Player {
 
 export interface CreateGameData {
   type: GameType;
-  name: string;
+  gameName: string;
   note: string;
+  passcode?: string;
+  blackPlayerId?: string;
 }
 
 export interface JoinGameData {

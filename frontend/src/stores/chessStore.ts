@@ -78,6 +78,7 @@ export const useGameStore = create<GameContext>((set, get) => {
     gameName: "",
     gameType: GameType.PUBLIC,
     notes: "",
+    userGames: [],
 
     setGameName: (name: string) => set({ gameName: name }),
     setGameType: (type: GameType) => set({ gameType: type }),
@@ -134,17 +135,33 @@ export const useGameStore = create<GameContext>((set, get) => {
       });
     },
 
-    createGame: async (data: CreateGameData) => {
-      const game = await createGame(data);
-      if (game)
+    createGame: async ({
+      passcode,
+      blackPlayerId,
+    }: {
+      passcode: string;
+      blackPlayerId: string;
+    }) => {
+      const data: CreateGameData = {
+        type: get().gameType,
+        gameName: get().gameName,
+        note: get().notes,
+        passcode: passcode ?? "",
+        blackPlayerId: blackPlayerId ?? "",
+      };
+
+      const serverResposne = createGame(data);
+
+      if (serverResposne.data) {
         set({
           gameState: mapBackendGameToGameState(game),
           room: game.id.toString(),
           gameType: game.type,
         });
+      }
     },
 
-    listGames: async (filters: SearchGame) => {
+    listGames: async (filters?: SearchGame) => {
       const games = await listGames(filters);
       return games;
     },

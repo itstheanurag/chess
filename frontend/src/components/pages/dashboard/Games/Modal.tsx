@@ -9,8 +9,15 @@ type Props = {
 };
 
 export default function CreateGameModal({ onClose }: Props) {
-  const { gameName, gameType, notes, setGameName, setGameType, setNotes } =
-    useGameStore();
+  const {
+    gameType,
+    gameName,
+    notes,
+    setGameName,
+    setGameType,
+    setNotes,
+    createGame,
+  } = useGameStore();
   const { searchUser } = useAuthStore();
 
   const [selectedUser, setSelectedUser] = useState<{
@@ -54,14 +61,12 @@ export default function CreateGameModal({ onClose }: Props) {
       return;
     }
 
-    // Send selectedUser.id or passcode to backend
     console.log("Game created with:", {
-      gameName,
-      gameType,
-      notes,
       invitedUserId: selectedUser?.id,
       passcode,
     });
+
+    createGame();
 
     onClose();
   };

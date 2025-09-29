@@ -1,5 +1,11 @@
 import api from "@/lib/axios";
-import { CreateGameData, Game, JoinGameData, SearchGame } from "@/types";
+import {
+  CreateGameData,
+  Game,
+  JoinGameData,
+  SearchGame,
+  ServerResponse,
+} from "@/types";
 
 export const listGames = async (
   filters?: SearchGame
@@ -17,7 +23,10 @@ export const createGame = async (
   data: CreateGameData
 ): Promise<Game | null> => {
   try {
-    const response = await api.post("/games", JSON.stringify(data));
+    const response = await api.post<ServerResponse<>>(
+      "/games",
+      JSON.stringify(data)
+    );
     return response.data.data ?? null;
   } catch (error) {
     console.error("Error creating game:", error);
