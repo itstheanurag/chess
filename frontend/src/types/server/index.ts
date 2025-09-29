@@ -22,3 +22,14 @@ export interface RegisterResponseData {
   email: string;
   tokens: Tokens;
 }
+
+export interface SearchUserResponse {
+  users: {
+    id: string;
+    name: string;
+    email: string;
+  }[];
+  page: number;
+  size: number;
+  totalEntries: number;
+}

@@ -1,6 +1,8 @@
 import { X } from "lucide-react";
 import { useGameStore } from "@/stores";
-import { GameType } from "@/types";
+import { useAuthStore } from "@/stores";
+import { GameType, SearchUserResponse, SearchData } from "@/types";
+import { useState, useEffect } from "react";
 
 type Props = {
   onClose: () => void;
@@ -9,10 +11,58 @@ type Props = {
 export default function CreateGameModal({ onClose }: Props) {
   const { gameName, gameType, notes, setGameName, setGameType, setNotes } =
     useGameStore();
+  const { searchUser } = useAuthStore();
+
+  const [selectedUser, setSelectedUser] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
+  const [passcode, setPasscode] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<
+    SearchUserResponse["users"]
+  >([]);
+  const [isSearching, setIsSearching] = useState(false);
+
+  useEffect(() => {
+    if (!searchQuery.trim() || selectedUser) {
+      setSearchResults([]);
+      return;
+    }
+
+    const handler = setTimeout(async () => {
+      setIsSearching(true);
+      const result = await searchUser({
+        q: searchQuery,
+        page: 1,
+        size: 10,
+      } as SearchData);
+
+      console.log(result);
+      setSearchResults(result?.data?.users || []);
+      setIsSearching(false);
+    }, 500);
+
+    return () => clearTimeout(handler);
+  }, [searchQuery, searchUser, selectedUser]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Game created with:", { gameName, gameType, notes });
+
+    if (gameType === GameType.PRIVATE && !selectedUser) {
+      alert("For private games, select a user or provide a passcode.");
+      return;
+    }
+
+    // Send selectedUser.id or passcode to backend
+    console.log("Game created with:", {
+      gameName,
+      gameType,
+      notes,
+      invitedUserId: selectedUser?.id,
+      passcode,
+    });
+
     onClose();
   };
 
@@ -27,11 +77,16 @@ export default function CreateGameModal({ onClose }: Props) {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Game Type */}
           <div>
             <label className="block text-sm font-medium mb-2">Game Type</label>
             <select
               value={gameType}
-              onChange={(e) => setGameType(e.target.value as any)}
+              onChange={(e) => {
+                setGameType(e.target.value as any);
+                setSelectedUser(null); // reset selection when type changes
+                setPasscode("");
+              }}
               className="w-full bg-neutral-800 border border-neutral-600 rounded-lg px-4 py-2 focus:outline-none focus:border-neutral-400"
               required
             >
@@ -40,7 +95,64 @@ export default function CreateGameModal({ onClose }: Props) {
             </select>
           </div>
 
-          {/* Game Name (optional) */}
+          {/* Private game options */}
+          {gameType === GameType.PRIVATE && (
+            <div className="space-y-4">
+              {/* Invite a User */}
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Invite a User (optional)
+                </label>
+                <input
+                  type="text"
+                  value={selectedUser ? selectedUser.name : searchQuery}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    setSelectedUser(null);
+                  }}
+                  placeholder="Search user..."
+                  className="w-full bg-neutral-800 border border-neutral-600 rounded-lg px-4 py-2 focus:outline-none focus:border-neutral-400"
+                />
+
+                {!selectedUser && !isSearching && searchResults.length > 0 && (
+                  <ul className="bg-neutral-700 mt-1 rounded-lg max-h-40 overflow-y-auto">
+                    {searchResults.map((user) => (
+                      <li
+                        key={user.id}
+                        onClick={() => {
+                          setSelectedUser({ id: user.id, name: user.name });
+                          setSearchQuery(user.name);
+                          setSearchResults([]);
+                        }}
+                        className="px-4 py-2 hover:bg-neutral-600 cursor-pointer"
+                      >
+                        {user.name} ({user.email})
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {isSearching && (
+                  <p className="text-sm text-gray-400 mt-1">Searching...</p>
+                )}
+              </div>
+
+              {/* Passcode field - always visible for private games */}
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Passcode (optional)
+                </label>
+                <input
+                  type="text"
+                  value={passcode}
+                  onChange={(e) => setPasscode(e.target.value)}
+                  placeholder="Enter a passcode for others to join"
+                  className="w-full bg-neutral-800 border border-neutral-600 rounded-lg px-4 py-2 focus:outline-none focus:border-neutral-400"
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Game Name */}
           <div>
             <label className="block text-sm font-medium mb-2">Game Name</label>
             <input
@@ -52,7 +164,7 @@ export default function CreateGameModal({ onClose }: Props) {
             />
           </div>
 
-          {/* Notes (optional) */}
+          {/* Notes */}
           <div>
             <label className="block text-sm font-medium mb-2">Notes</label>
             <textarea
@@ -64,6 +176,7 @@ export default function CreateGameModal({ onClose }: Props) {
             />
           </div>
 
+          {/* Buttons */}
           <div className="flex gap-3 pt-4">
             <button
               type="button"

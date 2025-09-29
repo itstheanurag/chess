@@ -1,3 +1,5 @@
+import { SearchUserResponse, ServerResponse } from ".";
+
 export interface RegisterData {
   username: string;
   email: string;
@@ -23,7 +25,17 @@ export interface AuthState {
   isLoading: boolean;
   setField: (field: "username" | "email" | "password", value: string) => void;
   resetFields: () => void;
+
   register: (data?: RegisterData) => Promise<void>;
   login: (data?: LoginData) => Promise<void>;
   logout: () => Promise<void>;
+  searchUser: (
+    query: SearchData
+  ) => Promise<ServerResponse<SearchUserResponse | null>>;
+}
+
+export interface SearchData {
+  q?: string;
+  page?: number;
+  size?: number;
 }

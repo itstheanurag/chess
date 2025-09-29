@@ -1,5 +1,11 @@
 import api from "@/lib/axios";
-import { LoginData, AuthUser, RegisterData } from "@/types";
+import {
+  LoginData,
+  AuthUser,
+  RegisterData,
+  SearchData,
+  SearchUserResponse,
+} from "@/types";
 import { removeToken, removeUser, saveToken, saveUser } from "../storage";
 import {
   Tokens,
@@ -92,5 +98,39 @@ export const logoutUser = async () => {
     console.log("Logged out successfully");
   } catch (err) {
     console.error("Logout error:", err);
+  }
+};
+
+export const callSearchUserApi = async (
+  params: SearchData
+): Promise<ServerResponse<SearchUserResponse | null>> => {
+  try {
+    const response = await api.get<ServerResponse<SearchUserResponse>>(
+      "/users",
+      {
+        params: {
+          q: params.q ?? "",
+          page: params.page ?? 1,
+          size: params.size ?? 20,
+        },
+      }
+    );
+
+    if (!response.data) {
+      return {
+        success: false,
+        message: "No data received from search API",
+        data: null,
+      };
+    }
+
+    return response.data;
+  } catch (err) {
+    console.error("Search user error:", err);
+    return {
+      success: false,
+      message: "Failed to search users",
+      data: null,
+    };
   }
 };
