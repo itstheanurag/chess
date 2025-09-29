@@ -25,8 +25,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isDrawerOpen, toggleDrawer }) => {
 
   const menuItems = [
     { id: "dashboard", icon: Activity, label: "Dashboard" },
-    { id: "games", icon: Gamepad2, label: "My Games" },
-    { id: "create", icon: Plus, label: "Create Game" },
+    { id: "chess", icon: Plus, label: "Create Game" },
     { id: "activity", icon: Clock, label: "Activity" },
     { id: "leaderboard", icon: Trophy, label: "Leaderboard" },
     { id: "puzzles", icon: Target, label: "Puzzles" },
@@ -36,10 +35,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isDrawerOpen, toggleDrawer }) => {
   return (
     <>
       {isDrawerOpen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
-          onClick={toggleDrawer}
-        />
+        <div className="fixed inset-0 z-40 md:hidden" onClick={toggleDrawer} />
       )}
 
       <div
@@ -47,7 +43,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isDrawerOpen, toggleDrawer }) => {
           fixed inset-y-0 left-0 z-50 flex flex-col
           bg-white shadow-xl transition-all duration-300 ease-in-out
           ${collapsed ? "lg:w-20" : "lg:w-80"}
-          md:w-20
           ${
             isDrawerOpen
               ? "translate-x-0"
@@ -55,7 +50,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isDrawerOpen, toggleDrawer }) => {
           }
         `}
       >
-        <div className="flex items-center justify-between p-4 border-b border-neutral-200 lg:justify-start">
+        <div className="flex items-center justify-between p-3 border-b border-neutral-200 lg:justify-start">
           {!collapsed && (
             <div className="hidden lg:block">
               <AuthUser />

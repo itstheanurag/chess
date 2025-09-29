@@ -93,6 +93,7 @@ export interface GameContext {
   playerName: string;
   gameName: string;
   gameType: string;
+  notes: string;
 
   connect: () => void;
   disconnect: () => void;
@@ -103,6 +104,11 @@ export interface GameContext {
   resetGame: () => void;
   createGame: (data: CreateGameData) => void;
   listGames: (filters: SearchGame) => void;
+
+  setGameName: (name: string) => void;
+  setGameType: (type: GameType) => void;
+  setNotes: (notes: string) => void;
+  setPlayerName: (name: string) => void;
 }
 
 export enum GameType {

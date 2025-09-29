@@ -73,9 +73,16 @@ export const useGameStore = create<GameContext>((set, get) => {
     isJoined: false,
     room: null,
     playerColor: null,
+
     playerName: "",
     gameName: "",
     gameType: GameType.PUBLIC,
+    notes: "",
+
+    setGameName: (name: string) => set({ gameName: name }),
+    setGameType: (type: GameType) => set({ gameType: type }),
+    setNotes: (notes: string) => set({ notes }),
+    setPlayerName: (name: string) => set({ playerName: name }),
 
     connect: () => initializeSocket(),
 
@@ -107,6 +114,8 @@ export const useGameStore = create<GameContext>((set, get) => {
         playerColor: null,
         selected: null,
         validMoves: [],
+        gameName: "",
+        gameType: GameType.PUBLIC,
       });
       if (gameSocket) gameSocket.emit("resetGame");
     },

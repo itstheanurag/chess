@@ -3,7 +3,8 @@ import ChessDashboard from "./Dashboard";
 import { useUIStore } from "@/stores";
 import Sidebar from "./SideBar";
 import { Menu } from "lucide-react";
-import CreateGameModal from "./Games/CreatGameModal";
+import CreateGameModal from "./Games/CreateGame";
+import ChessGamesPage from "./Games/ChessGamePage";
 
 const DashboardLayout = () => {
   const { activeSection, collapsed } = useUIStore();
@@ -15,8 +16,8 @@ const DashboardLayout = () => {
     switch (activeSection) {
       case "dashboard":
         return <ChessDashboard />;
-      case "create":
-        return <CreateGameModal />;
+      case "chess":
+        return <ChessGamesPage />;
       default:
         return <div>Coming soon...</div>;
     }
@@ -27,26 +28,28 @@ const DashboardLayout = () => {
       <Sidebar isDrawerOpen={isDrawerOpen} toggleDrawer={toggleDrawer} />
 
       <div
-        className={`flex-1 transition-all duration-300 p-2 md:px-4 md:pb-4 md:pt-0 ${
+        className={`flex-1 transition-all duration-300 ${
           collapsed ? "lg:ml-20" : "lg:ml-80"
         } md:ml-0`}
       >
-        <div className="sticky top-0 z-30 bg-white/50 dark:bg-neutral-900/60 backdrop-blur-2xl shadow-sm border-neutral-200 p-6 border-b rounded-lg  flex items-center justify-between mb-4">
+        {/* Header */}
+        <div className="sticky top-0 z-10 w-full bg-white border-b border-neutral-200 p-3 flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <button
               onClick={toggleDrawer}
-              className="lg:hidden p-2 rounded-md hover:bg-neutral-100"
+              className="lg:hidden rounded-md hover:bg-neutral-100"
             >
               <Menu className="h-6 w-6 text-neutral-700" />
             </button>
 
-            <h2 className="text-xl font-semibold text-neutral-900 capitalize">
+            <div className="font-semibold text-neutral-900 capitalize p-3">
               {activeSection}
-            </h2>
+            </div>
           </div>
         </div>
 
-        {renderContent()}
+        {/* Content */}
+        <div className="p-4">{renderContent()}</div>
       </div>
     </div>
   );
