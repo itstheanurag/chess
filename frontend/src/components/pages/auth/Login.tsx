@@ -2,9 +2,9 @@ import { Eye, EyeOff, Mail, Lock, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "@/stores";
 import { useState } from "react";
-import BackButton from "@/components/BackButton";
+import BackButton from "@/components/ui/buttons/BackButton";
 import FormInput from "@/components/InputField";
-import Button from "@/components/ui/buttons/SubmitButton";
+import Button from "@/components/ui/buttons/Button";
 
 const Login = () => {
   const navigate = useNavigate();

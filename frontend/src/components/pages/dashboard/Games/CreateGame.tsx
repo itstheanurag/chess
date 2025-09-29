@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { GameType, CreateGameData } from "@/types";
 import { useGameStore } from "@/stores";
+import Button from "@/components/ui/buttons/Button";
 
-const CreateGame = () => {
+const CreateGameForm = ({ onSuccess }: { onSuccess?: () => void }) => {
   const createGame = useGameStore((state) => state.createGame);
 
   const [type, setType] = useState<GameType>(GameType.PUBLIC);
@@ -20,9 +21,10 @@ const CreateGame = () => {
     const data: CreateGameData = { type, name, note };
 
     try {
-      await createGame(data);
+      createGame(data);
       setName("");
       setNote("");
+      onSuccess?.(); //
     } catch (err) {
       console.error(err);
       setError("Failed to create game");
@@ -32,14 +34,13 @@ const CreateGame = () => {
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border p-6 max-w-md mx-auto">
+    <div className="p-4">
       <h2 className="text-xl font-semibold text-gray-900 mb-4">
         Create New Game
       </h2>
 
       {error && <p className="text-red-500 mb-2">{error}</p>}
 
-      {/* Game Type */}
       <div className="mb-4">
         <label className="block text-gray-700 font-medium mb-1">
           Game Type
@@ -47,14 +48,13 @@ const CreateGame = () => {
         <select
           value={type}
           onChange={(e) => setType(e.target.value as GameType)}
-          className="w-full border rounded-lg p-2"
+          className="w-full border border-gray-300 rounded-lg p-2 bg-neutral-50 text-neutral-700 focus:ring-2 focus:ring-neutral-400 focus:outline-none"
         >
           <option value={GameType.PUBLIC}>Play with Friend</option>
           <option value={GameType.PRIVATE}>Find Opponent</option>
         </select>
       </div>
 
-      {/* Game Name */}
       <div className="mb-4">
         <label className="block text-gray-700 font-medium mb-1">
           Game Name
@@ -68,7 +68,6 @@ const CreateGame = () => {
         />
       </div>
 
-      {/* Note */}
       <div className="mb-4">
         <label className="block text-gray-700 font-medium mb-1">Note</label>
         <textarea
@@ -79,15 +78,15 @@ const CreateGame = () => {
         />
       </div>
 
-      <button
+      <Button
         onClick={handleSubmit}
         disabled={loading}
-        className="w-full bg-blue-500 text-white p-3 rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50"
+        className="w-full disabled:opacity-50"
       >
         {loading ? "Creating..." : "Create Game"}
-      </button>
+      </Button>
     </div>
   );
 };
 
-export default CreateGame;
+export default CreateGameForm;

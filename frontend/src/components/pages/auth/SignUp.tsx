@@ -2,9 +2,9 @@ import { User, Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "@/stores";
-import BackButton from "@/components/BackButton";
+import BackButton from "@/components/ui/buttons/BackButton";
 import FormInput from "@/components/InputField";
-import Button from "@/components/ui/buttons/SubmitButton";
+import Button from "@/components/ui/buttons/Button";
 
 const Register: React.FC = () => {
   const { username, email, password, isLoading, setField, register } =

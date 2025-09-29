@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import ChessDashboard from "./Dashboard";
-import CreateGame from "./CreateGame";
 import { useUIStore } from "@/stores";
 import Sidebar from "./SideBar";
 import { Menu } from "lucide-react";
+import CreateGameModal from "./Games/CreatGameModal";
 
 const DashboardLayout = () => {
   const { activeSection, collapsed } = useUIStore();
@@ -16,7 +16,7 @@ const DashboardLayout = () => {
       case "dashboard":
         return <ChessDashboard />;
       case "create":
-        return <CreateGame />;
+        return <CreateGameModal />;
       default:
         return <div>Coming soon...</div>;
     }

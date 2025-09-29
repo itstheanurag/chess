@@ -8,7 +8,7 @@ const Button: React.FC<ButtonProps> = ({ isLoading, children, ...props }) => {
     <button
       {...props}
       disabled={props.disabled || isLoading}
-      className={`w-full py-3 px-4 bg-gray-900 text-white font-semibold rounded-lg shadow hover:shadow-lg 
+      className={`w-full py-3 px-4 bg-gray-900 text-neutral-50 font-semibold rounded-lg shadow hover:shadow-lg 
         focus:outline-none focus:ring-2 focus:ring-gray-700 focus:ring-offset-2 transition-all duration-200
         disabled:opacity-50 disabled:cursor-not-allowed ${
           props.className || ""
@@ -17,7 +17,7 @@ const Button: React.FC<ButtonProps> = ({ isLoading, children, ...props }) => {
       {isLoading ? (
         <span className="flex items-center justify-center space-x-2">
           <svg
-            className="animate-spin h-5 w-5 text-white"
+            className="animate-spin h-5 w-5 text-neutral-50"
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"

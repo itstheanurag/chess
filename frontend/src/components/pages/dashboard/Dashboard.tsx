@@ -73,7 +73,7 @@ const ChessDashboard = () => {
                 className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
               >
                 <div className="flex items-center space-x-4">
-                  <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                  <div className="w-10 h-10 bg-neutral-800 rounded-full flex items-center justify-center">
                     <span className="text-white font-semibold text-sm">
                       {game.opponent
                         .split(" ")
