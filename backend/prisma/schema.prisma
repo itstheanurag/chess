@@ -10,40 +10,44 @@ generator client {
 }
 
 model User {
-  id           BigInt    @id @default(autoincrement())
-  username     String    @unique @db.VarChar(50)
-  email        String    @unique @db.VarChar(100)
-  passwordHash String    @map("password_hash")
-  rating       Int       @default(1200)
-  createdAt    DateTime  @default(now()) @map("created_at")
-  updatedAt    DateTime  @default(now()) @map("updated_at")
+  id           String        @id @default(uuid()) @db.Uuid
+  username     String        @unique @db.VarChar(50)
+  email        String        @unique @db.VarChar(100)
+  passwordHash String        @map("password_hash")
+  rating       Int           @default(1200)
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @default(now()) @map("updated_at")
 
-  whiteGames   Game[]    @relation("WhitePlayer")
-  blackGames   Game[]    @relation("BlackPlayer")
+  whiteGames   Game[]        @relation("WhitePlayer")
+  blackGames   Game[]        @relation("BlackPlayer")
   moves        GameMove[]
   spectating   GameSpectator[]
+
+  @@map("user")
 }
 
 model Game {
-  id            BigInt          @id @default(autoincrement())
-  whitePlayerId BigInt?         @map("white_player_id")
-  blackPlayerId BigInt?         @map("black_player_id")
-  status        String          @db.VarChar(20)
-  result        String?         @db.VarChar(20)
-  type          GameType        @default(PUBLIC)   
-  passcode      String?         @db.VarChar(20)   
-  isVisible     Boolean         @default(false)   
-  fen           String          @db.Text         
-  startedAt     DateTime?       @map("started_at")
-  endedAt       DateTime?       @map("ended_at")
-  createdAt     DateTime        @default(now()) @map("created_at")
-
-  whitePlayer   User?           @relation("WhitePlayer", fields: [whitePlayerId], references: [id], onDelete: SetNull)
-  blackPlayer   User?           @relation("BlackPlayer", fields: [blackPlayerId], references: [id], onDelete: SetNull)
+  id            String         @id @default(uuid()) @db.Uuid
+  whitePlayerId String?        @map("white_player_id") @db.Uuid
+  blackPlayerId String?        @map("black_player_id") @db.Uuid
+  status        String         @db.VarChar(20)
+  result        String?        @db.VarChar(20)
+  type          GameType       @default(PUBLIC)   
+  passcode      String?        @db.VarChar(20)   
+  isVisible     Boolean        @default(false)   
+  fen           String         @db.Text         
+  startedAt     DateTime?      @map("started_at")
+  endedAt       DateTime?      @map("ended_at")
+  createdAt     DateTime       @default(now()) @map("created_at")
+  notes         String?        
+  name          String         @default("")
+  whitePlayer   User?          @relation("WhitePlayer", fields: [whitePlayerId], references: [id], onDelete: SetNull)
+  blackPlayer   User?          @relation("BlackPlayer", fields: [blackPlayerId], references: [id], onDelete: SetNull)
   moves         GameMove[]
   spectators    GameSpectator[]
-}
 
+  @@map("game")
+}
 
 enum GameType {
   PUBLIC
@@ -51,29 +55,31 @@ enum GameType {
 }
 
 model GameMove {
-  id         BigInt   @id @default(autoincrement())
-  gameId     BigInt   @map("game_id")
-  moveNumber Int      @map("move_number")
-  playerId   BigInt?  @map("player_id")
-  fromSquare String   @map("from_square") @db.VarChar(5)
-  toSquare   String   @map("to_square") @db.VarChar(5)
-  promotion  String?  @db.VarChar(5)
+  id         String    @id @default(uuid()) @db.Uuid
+  gameId     String    @map("game_id") @db.Uuid
+  moveNumber Int       @map("move_number")
+  playerId   String?   @map("player_id") @db.Uuid
+  fromSquare String    @map("from_square") @db.VarChar(5)
+  toSquare   String    @map("to_square") @db.VarChar(5)
+  promotion  String?   @db.VarChar(5)
   fen        String
-  createdAt  DateTime @default(now()) @map("created_at")
+  createdAt  DateTime  @default(now()) @map("created_at")
 
-  game       Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
-  player     User?    @relation(fields: [playerId], references: [id], onDelete: SetNull)
+  game       Game      @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  player     User?     @relation(fields: [playerId], references: [id], onDelete: SetNull)
+
+  @@map("game_move")
 }
 
 model GameSpectator {
-  id           BigInt   @id @default(autoincrement())
-  gameId       BigInt   @map("game_id")
-  spectatorId  BigInt   @map("spectator_id")
-  joinedAt     DateTime @default(now()) @map("joined_at")
+  id           String    @id @default(uuid()) @db.Uuid
+  gameId       String    @map("game_id") @db.Uuid
+  spectatorId  String    @map("spectator_id") @db.Uuid
+  joinedAt     DateTime  @default(now()) @map("joined_at")
 
-  // Relations
-  game         Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
-  spectator    User     @relation(fields: [spectatorId], references: [id], onDelete: Cascade)
+  game         Game      @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  spectator    User      @relation(fields: [spectatorId], references: [id], onDelete: Cascade)
 
   @@unique([gameId, spectatorId])
+  @@map("game_spectator")
 }

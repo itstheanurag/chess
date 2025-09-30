@@ -8,35 +8,31 @@ import { createGameSchema, GameStatus, GameType } from "@/schema/game";
 
 export const createGame = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const userId = BigInt(req.user!.id);
+    const userId = req.user!.id;
 
-    // Validate request body
     const result = createGameSchema.safeParse(req.body);
     if (!result.success) {
       return sendError(res, 400, "Invalid request", result.error);
     }
 
-    let { type, passcode, blackPlayerId } = result.data;
+    let { type, passcode, blackPlayerId, notes, name } = result.data;
 
-    // Passcode rules
     if (type === GameType.PUBLIC && passcode) {
       return sendError(res, 400, "Passcode is not allowed for public games");
     }
 
     if (type === GameType.PRIVATE && !passcode) {
-      // Generate random 6-digit passcode
       passcode = Math.floor(100000 + Math.random() * 900000).toString();
     }
 
-    // Parse blackPlayerId if provided
-    const blackId = blackPlayerId ? BigInt(blackPlayerId) : null;
+    const blackId = blackPlayerId ?? null;
 
     const chess = new ChessGame();
     const initialFen = chess.fen();
 
-    // Create game in DB
     const game = await prisma.game.create({
       data: {
+        name,
         whitePlayerId: userId,
         blackPlayerId: blackId,
         status: GameStatus.WAITING,
@@ -45,6 +41,7 @@ export const createGame = async (req: AuthenticatedRequest, res: Response) => {
         isVisible: type === GameType.PUBLIC,
         fen: initialFen,
         startedAt: null,
+        notes: notes ?? null,
       },
     });
 
@@ -64,10 +61,10 @@ export const joinGame = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { passcode } = req.body;
     const { gameId } = req.params;
-    const userId = BigInt(req.user!.id);
+    const userId = req.user!.id;
 
     const game = await prisma.game.findUnique({
-      where: { id: BigInt(gameId) },
+      where: { id: gameId },
     });
 
     if (!game) return sendError(res, 404, "Game not found");
@@ -91,7 +88,7 @@ export const joinGame = async (req: AuthenticatedRequest, res: Response) => {
     }
 
     const updated = await prisma.game.update({
-      where: { id: BigInt(gameId) },
+      where: { id: gameId },
       data: {
         blackPlayerId: userId,
         status: "ONGOING",
@@ -117,7 +114,7 @@ export const getGame = async (req: Request, res: Response) => {
     if (!gameId) return sendError(res, 400, "Game ID is required");
 
     const game = await prisma.game.findUnique({
-      where: { id: BigInt(gameId) },
+      where: { id: gameId },
       include: { moves: { orderBy: { moveNumber: "asc" } } },
     });
 
@@ -151,7 +148,7 @@ export const makeMove = async (req: Request, res: Response) => {
       return sendError(res, 400, 'Both "from" and "to" fields are required');
 
     const game = await prisma.game.findUnique({
-      where: { id: BigInt(gameId) },
+      where: { id: gameId },
       include: { moves: { orderBy: { moveNumber: "asc" } } },
     });
 
@@ -183,7 +180,7 @@ export const makeMove = async (req: Request, res: Response) => {
 
     await prisma.gameMove.create({
       data: {
-        gameId: BigInt(gameId),
+        gameId: gameId,
         moveNumber: game.moves.length + 1,
         playerId: null,
         fromSquare: from,
@@ -219,7 +216,7 @@ export const getValidMoves = async (req: Request, res: Response) => {
     if (!square) return sendError(res, 400, "Square parameter is required");
 
     const game = await prisma.game.findUnique({
-      where: { id: BigInt(gameId) },
+      where: { id: gameId },
       include: { moves: { orderBy: { moveNumber: "asc" } } },
     });
     if (!game) return sendError(res, 404, "Game not found");
@@ -260,12 +257,14 @@ export const getValidMoves = async (req: Request, res: Response) => {
     );
   }
 };
+
 export const listGames = async (req: Request, res: Response) => {
   try {
     const { status, type } = req.query;
     const where: any = {};
     if (status && typeof status === "string")
       where.status = status.toUpperCase();
+
     if (type && typeof type === "string") where.type = type.toUpperCase();
 
     const games = await prisma.game.findMany({
@@ -275,8 +274,26 @@ export const listGames = async (req: Request, res: Response) => {
         status: true,
         type: true,
         fen: true,
+        notes: true,
+        name: true,
         isVisible: true,
         createdAt: true,
+        whitePlayerId: true,
+        blackPlayerId: true,
+        whitePlayer: {
+          select: {
+            id: true,
+            username: true,
+            email: true,
+          },
+        },
+        blackPlayer: {
+          select: {
+            id: true,
+            username: true,
+            email: true,
+          },
+        },
       },
       orderBy: { createdAt: "desc" },
       take: 50,
@@ -284,7 +301,7 @@ export const listGames = async (req: Request, res: Response) => {
 
     return sendResponse(res, 200, { games }, "Games fetched successfully");
   } catch (error) {
-    console.error("Error listing games:", error);
+    // console.error("Error listing games:", error);
     return sendError(
       res,
       500,

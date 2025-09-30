@@ -35,7 +35,7 @@ export const searchUser = async (
               { email: { contains: query, mode: "insensitive" } },
             ],
           },
-          { NOT: { id: BigInt(userId) } },
+          { NOT: { id: userId } },
         ],
       },
     });
@@ -49,7 +49,7 @@ export const searchUser = async (
               { email: { contains: query, mode: "insensitive" } },
             ],
           },
-          { NOT: { id: BigInt(userId) } },
+          { NOT: { id: userId } },
         ],
       },
       select: {

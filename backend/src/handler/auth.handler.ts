@@ -39,7 +39,7 @@ export const register = async (
     return sendResponse(
       res,
       201,
-      { ...user, id: user.id.toString() },
+      { ...user },
       "User registered successfully. Please login"
     );
   } catch (err) {

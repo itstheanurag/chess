@@ -1,6 +1,5 @@
 import z from "zod";
 
-// --- Enums ---
 export enum GameType {
   PUBLIC = "PUBLIC",
   PRIVATE = "PRIVATE",
@@ -12,10 +11,10 @@ export enum GameStatus {
   FINISHED = "FINISHED",
 }
 
-// --- Schemas ---
 export const createGameSchema = z
   .object({
-    type: z.nativeEnum(GameType).default(GameType.PUBLIC),
+    name: z.string("Name is required for game Creation"),
+    type: z.enum(GameType).default(GameType.PUBLIC),
     passcode: z.string().max(20).optional(),
     fen: z.string().optional(),
     blackPlayerId: z.string().optional(),
