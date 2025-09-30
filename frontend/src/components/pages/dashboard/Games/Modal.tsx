@@ -17,6 +17,7 @@ export default function CreateGameModal({ onClose }: Props) {
     setGameType,
     setNotes,
     createGame,
+    listGames,
   } = useGameStore();
   const { searchUser } = useAuthStore();
 
@@ -25,10 +26,13 @@ export default function CreateGameModal({ onClose }: Props) {
     name: string;
   } | null>(null);
   const [passcode, setPasscode] = useState("");
+
   const [searchQuery, setSearchQuery] = useState("");
+
   const [searchResults, setSearchResults] = useState<
     SearchUserResponse["users"]
   >([]);
+
   const [isSearching, setIsSearching] = useState(false);
 
   useEffect(() => {
@@ -45,7 +49,7 @@ export default function CreateGameModal({ onClose }: Props) {
         size: 10,
       } as SearchData);
 
-      console.log(result);
+      console.log("CreateGameModal", "handler", result);
       setSearchResults(result?.data?.users || []);
       setIsSearching(false);
     }, 500);
@@ -55,19 +59,8 @@ export default function CreateGameModal({ onClose }: Props) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (gameType === GameType.PRIVATE && !selectedUser) {
-      alert("For private games, select a user or provide a passcode.");
-      return;
-    }
-
-    console.log("Game created with:", {
-      invitedUserId: selectedUser?.id,
-      passcode,
-    });
-
     createGame();
-
+    listGames();
     onClose();
   };
 

@@ -147,13 +147,15 @@ export const useGameStore = create<GameContext>((set, get) => {
         blackPlayerId: data?.blackPlayerId ?? "",
       };
 
+      console.log("CREATING A CHESS GAME ", payload);
+
       await createGame(payload);
     },
 
     listGames: async (filters?: SearchGame) => {
-      const games = await listGames(filters);
-      if (games) {
-        set({ userGames: games });
+      const result = await listGames(filters);
+      if (result) {
+        set({ userGames: result.games });
       }
     },
 

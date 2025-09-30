@@ -56,7 +56,7 @@ export default function GameCard({ game }: { game: Game }) {
             )}
             <div className="flex items-center gap-1">
               <Trophy size={16} />
-              {game.moves.length} moves
+              {game.moves?.length} moves
             </div>
           </div>
         </div>

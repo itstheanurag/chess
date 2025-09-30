@@ -3,7 +3,7 @@ import { CreateGameData, Game, JoinGameData, SearchGame } from "@/types";
 
 export const listGames = async (
   filters?: SearchGame
-): Promise<Game[] | null> => {
+): Promise<{ games: Game[] } | null> => {
   try {
     const response = await api.get("/games/list", { params: filters });
     return response.data.data ?? [];

@@ -1,5 +1,5 @@
 import { Game, GameType } from "@/types";
-import {  useEffect } from "react";
+import { useEffect } from "react";
 import GameCard from "./GameCard";
 import GameStats from "./GameStats";
 import CreatGame from "./CreateGame";
@@ -7,7 +7,7 @@ import { useGameStore } from "@/stores";
 
 const ChessGamesPage = () => {
   const { listGames, userGames } = useGameStore();
-  
+
   useEffect(() => {
     const fetchGames = async () => {
       listGames();
@@ -16,11 +16,12 @@ const ChessGamesPage = () => {
     fetchGames();
   }, [listGames]);
 
+  const games = Array.isArray(userGames) ? userGames : [];
   const stats = {
-    total: userGames.length,
-    wins: userGames.filter((g) => g.result === "win").length,
-    losses: userGames.filter((g) => g.result === "loss").length,
-    draws: userGames.filter((g) => g.result === "draw").length,
+    total: games.length,
+    wins: games.filter((g) => g.result === "win").length,
+    losses: games.filter((g) => g.result === "loss").length,
+    draws: games.filter((g) => g.result === "draw").length,
   };
 
   return (
@@ -44,8 +45,8 @@ const ChessGamesPage = () => {
         <GameStats stats={stats} />
 
         <div className="space-y-4">
-          {userGames.map((game: Game) => (
-            <GameCard key={game.id.toString()} game={game} />
+          {games.map((game: Game) => (
+            <GameCard key={game.id} game={game} />
           ))}
         </div>
       </div>
