@@ -20,3 +20,10 @@ export interface ChatMessage {
   message: string;
   timestamp: Date;
 }
+
+export interface Stats {
+  total: number;
+  wins: number;
+  losses: number;
+  draws: number;
+}

@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { ChessGame } from "@/games/chess.game";
 import { Square } from "chess.js";
 import { sendResponse, sendError } from "@/utils/helper";
-import { AuthenticatedRequest } from "@/types";
+import { AuthenticatedRequest, Stats } from "@/types";
 import {
   createGameSchema,
   GameStatus,
@@ -335,7 +335,7 @@ export const listGames = async (req: Request, res: Response) => {
         games,
         page: pageNum,
         size: pageSize,
-        totalEntries,
+        total: totalEntries,
       },
       "Games fetched successfully"
     );
@@ -345,6 +345,59 @@ export const listGames = async (req: Request, res: Response) => {
       res,
       500,
       "Failed to list games",
+      error instanceof Error ? error.message : "Unknown error"
+    );
+  }
+};
+
+export const GetAllGameStats = async (
+  req: AuthenticatedRequest,
+  res: Response
+) => {
+  try {
+    const userId = req.user!.id;
+
+    const total = await prisma.game.count({
+      where: {
+        OR: [{ whitePlayerId: userId }, { blackPlayerId: userId }],
+      },
+    });
+
+    const wins = await prisma.game.count({
+      where: {
+        OR: [
+          { whitePlayerId: userId, result: "white_win" },
+          { blackPlayerId: userId, result: "black_win" },
+        ],
+      },
+    });
+
+    const losses = await prisma.game.count({
+      where: {
+        OR: [
+          { whitePlayerId: userId, result: "black_win" },
+          { blackPlayerId: userId, result: "white_win" },
+        ],
+      },
+    });
+
+    const draws = await prisma.game.count({
+      where: {
+        OR: [
+          { whitePlayerId: userId, result: "draw" },
+          { blackPlayerId: userId, result: "draw" },
+        ],
+      },
+    });
+
+    const stats: Stats = { total, wins, losses, draws };
+    return sendResponse(res, 200, { stats }, "Stats fetched successfully");
+  } catch (error) {
+    console.error("Error fetching game stats:", error);
+    return sendError(
+      res,
+      500,
+      "Failed to fetch game stats",
       error instanceof Error ? error.message : "Unknown error"
     );
   }
