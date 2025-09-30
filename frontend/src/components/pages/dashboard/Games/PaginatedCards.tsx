@@ -2,6 +2,14 @@ import { useState, useEffect } from "react";
 import GameCard from "./GameCard";
 import { useGameStore } from "@/stores";
 import { GameStatusEnum, GameType, SearchGame } from "@/types";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Search,
+  Activity,
+  Lock,
+  Globe,
+} from "lucide-react";
 
 export default function PaginatedGamesCards() {
   const { userGames, listGames, currentPage, pages, total } = useGameStore();
@@ -17,8 +25,8 @@ export default function PaginatedGamesCards() {
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedSearch(searchQuery);
-      setPage(1); 
-    }, 500); 
+      setPage(1);
+    }, 500);
 
     return () => clearTimeout(handler);
   }, [searchQuery]);
@@ -33,7 +41,6 @@ export default function PaginatedGamesCards() {
         type: gameTypeFilter || undefined,
         status: statusFilter || undefined,
       };
-
       await listGames(filters);
     } finally {
       setLoading(false);
@@ -46,15 +53,21 @@ export default function PaginatedGamesCards() {
 
   return (
     <div>
-      {/* Search and Filters */}
-      <div className="flex flex-wrap gap-2 mb-4">
-        <input
-          type="text"
-          placeholder="Search games..."
-          className="border rounded px-2 py-1 text-sm flex-1 min-w-[150px]"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
+      {/* Search & Filters */}
+      <div className="flex flex-wrap gap-3 mb-6">
+        <div className="relative flex-1">
+          <Search
+            className="absolute left-2 top-1/2 -translate-y-1/2 text-neutral-400"
+            size={16}
+          />
+          <input
+            type="text"
+            placeholder="Search games..."
+            className="w-full pl-7 pr-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
 
         <select
           value={statusFilter || ""}
@@ -93,34 +106,33 @@ export default function PaginatedGamesCards() {
 
       {/* Game Cards */}
       <div className="space-y-4">
-        {loading
-          ? [...Array(pageSize)].map((_, idx) => (
-              <div
-                key={idx}
-                className="rounded-lg p-4 border border-neutral-600 animate-pulse h-20"
-              />
-            ))
-          : userGames.map((game) => <GameCard key={game.id} game={game} />)}
+        {userGames.map((game) => (
+          <GameCard key={game.id} game={game} />
+        ))}
       </div>
 
       {/* Pagination */}
-      <div className="flex justify-center mt-6 gap-2">
+      <div className="flex justify-center items-center gap-3 mt-6">
         <button
           disabled={page === 1 || loading}
           onClick={() => setPage((p) => p - 1)}
-          className="px-4 py-2 border rounded disabled:opacity-50"
+          className="flex items-center px-4 py-2 rounded-lg bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition"
         >
-          Prev
+          <ChevronLeft size={16} />
+          <span className="ml-1">Prev</span>
         </button>
-        <span className="px-4 py-2">
-          Page {currentPage} of {pages} ({total} entries)
+
+        <span className="px-3 py-2 text-sm text-gray-300">
+          Page {currentPage} of {pages} ({total} games)
         </span>
+
         <button
           disabled={page === pages || loading}
           onClick={() => setPage((p) => p + 1)}
-          className="px-4 py-2 border rounded disabled:opacity-50"
+          className="flex items-center px-4 py-2 rounded-lg bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition"
         >
-          Next
+          <span className="mr-1">Next</span>
+          <ChevronRight size={16} />
         </button>
       </div>
     </div>

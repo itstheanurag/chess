@@ -20,9 +20,6 @@ const ChessGamesPage = () => {
             <CreatGame />
           </div>
         </div>
-
-        <GameStats />
-
         <PaginatedGamesCards />
       </div>
     </div>

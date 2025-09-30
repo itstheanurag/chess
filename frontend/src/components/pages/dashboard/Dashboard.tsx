@@ -1,5 +1,5 @@
 import Button from "@/components/ui/buttons/Button";
-import StatsCards from "./StatsCards";
+import GameStats from "./Games/GameStats";
 
 const ChessDashboard = () => {
   const recentActivity = [
@@ -27,13 +27,6 @@ const ChessDashboard = () => {
     },
   ];
 
-  const stats = {
-    gamesPlayed: 234,
-    winRate: 68,
-    currentStreak: 5,
-    puzzlesSolved: 1420,
-  };
-
   const activeGames = [
     {
       id: 1,
@@ -60,7 +53,7 @@ const ChessDashboard = () => {
 
   return (
     <div className="space-y-6">
-      <StatsCards stats={stats} />
+      <GameStats />
 
       <div className="bg-white rounded-xl shadow-sm border">
         <div className="p-6 border-b border-gray-200">
