@@ -1,4 +1,4 @@
-import z from "zod";
+import z, { nullable } from "zod";
 
 export enum GameType {
   PUBLIC = "PUBLIC",
@@ -13,11 +13,11 @@ export enum GameStatus {
 
 export const createGameSchema = z
   .object({
-    name: z.string("Name is required for game Creation"),
+    gameName: z.string("Name is required for game Creation"),
     type: z.enum(GameType).default(GameType.PUBLIC),
     passcode: z.string().max(20).optional(),
     fen: z.string().optional(),
-    blackPlayerId: z.string().optional(),
+    blackPlayerId: z.string().optional().nullable(),
     notes: z.string().optional(),
   })
   .refine(

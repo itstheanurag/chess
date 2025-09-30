@@ -3,19 +3,19 @@ import { ChessGame } from "@/games/chess.game";
 import { Square } from "chess.js";
 import { sendResponse, sendError } from "@/utils/helper";
 import { AuthenticatedRequest } from "@/types";
-import prisma from "@/libs/db";
 import { createGameSchema, GameStatus, GameType } from "@/schema/game";
+import prisma from "@/libs/db";
 
 export const createGame = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const userId = req.user!.id;
-
+    console.log(userId);
     const result = createGameSchema.safeParse(req.body);
     if (!result.success) {
       return sendError(res, 400, "Invalid request", result.error);
     }
 
-    let { type, passcode, blackPlayerId, notes, name } = result.data;
+    let { type, passcode, blackPlayerId, notes, gameName } = result.data;
 
     if (type === GameType.PUBLIC && passcode) {
       return sendError(res, 400, "Passcode is not allowed for public games");
@@ -25,24 +25,25 @@ export const createGame = async (req: AuthenticatedRequest, res: Response) => {
       passcode = Math.floor(100000 + Math.random() * 900000).toString();
     }
 
-    const blackId = blackPlayerId ?? null;
-
     const chess = new ChessGame();
     const initialFen = chess.fen();
 
+    const payload = {
+      whitePlayerId: userId,
+      blackPlayerId:
+        blackPlayerId && blackPlayerId.trim() !== "" ? blackPlayerId : null,
+      status: GameStatus.WAITING,
+      type: type || GameType.PUBLIC,
+      passcode: type === GameType.PRIVATE ? passcode : null,
+      isVisible: type === GameType.PUBLIC,
+      fen: initialFen,
+      startedAt: null,
+      notes: notes?.trim() || null,
+      name: gameName?.trim() || "",
+    };
+
     const game = await prisma.game.create({
-      data: {
-        name,
-        whitePlayerId: userId,
-        blackPlayerId: blackId,
-        status: GameStatus.WAITING,
-        type: type || GameType.PUBLIC,
-        passcode: type === GameType.PRIVATE ? passcode : null,
-        isVisible: type === GameType.PUBLIC,
-        fen: initialFen,
-        startedAt: null,
-        notes: notes ?? null,
-      },
+      data: payload,
     });
 
     return sendResponse(res, 201, game, "Game created successfully");

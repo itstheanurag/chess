@@ -6,6 +6,8 @@ export interface ErrorResponse {
   details?: any;
 }
 
+type ErrorDetails = ZodError | unknown;
+
 /**
  * Wraps an async route handler to properly catch and forward errors to Express's error handler
  * @param fn - Async route handler function
@@ -59,29 +61,33 @@ export const sendResponse = (
  * @param statusCode - Optional HTTP status code (default 500)
  * @param details - Optional error details
  */
+
 export function sendError(
   res: Response,
   statusCode: number,
-  error: unknown,
-  details?: unknown
-): Response<ErrorResponse> {
+  message: string | Error,
+  details?: ErrorDetails
+): Response {
+  if (details instanceof ZodError) {
+    const fieldErrors: Record<string, string[]> = {};
 
-  if (error instanceof ZodError) {
-    const fieldErrors = z.flattenError(error).fieldErrors;
+    for (const issue of details.issues) {
+      const field = issue.path.join(".") || "global";
+      if (!fieldErrors[field]) {
+        fieldErrors[field] = [];
+      }
+      fieldErrors[field].push(issue.message);
+    }
 
     return res.status(statusCode).json({
       success: false,
-      error: fieldErrors,
-      details,
+      error: message,
+      details: fieldErrors,
     });
   }
 
   const errorMessage =
-    error instanceof Error
-      ? error.message
-      : typeof error === "string"
-      ? error
-      : "Unknown error occurred";
+    message instanceof Error ? message.message : String(message);
 
   return res.status(statusCode).json({
     success: false,

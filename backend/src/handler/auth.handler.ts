@@ -86,7 +86,7 @@ export const login = async (req: Request, res: Response): Promise<Response> => {
       "Login successful"
     );
   } catch (err) {
-    return sendError(res, 400, err);
+    return sendError(res, 500, "Internal Server Error", err);
   }
 };
 
@@ -98,7 +98,7 @@ export const userLogInCheck = async (
     const { user } = req;
     return sendResponse(res, 200, user, "user is loggedIn");
   } catch (err) {
-    return sendError(res, 400, err);
+    return sendError(res, 500, "Internal Server Error", err);
   }
 };
 
