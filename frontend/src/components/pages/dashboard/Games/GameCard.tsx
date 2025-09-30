@@ -1,5 +1,5 @@
-import { Calendar, Clock, Trophy, User } from "lucide-react";
-import { Game } from "@/types";
+import { Calendar, Clock, Trophy, User, Lock } from "lucide-react";
+import { Game, GameType } from "@/types";
 
 const getResultBadge = (result?: string | null) => {
   switch (result) {
@@ -14,6 +14,17 @@ const getResultBadge = (result?: string | null) => {
   }
 };
 
+const getGameTypeBadge = (type: GameType) => {
+  switch (type) {
+    case GameType.PUBLIC:
+      return "bg-blue-800 text-neutral-50";
+    case GameType.PRIVATE:
+      return "bg-purple-800 text-neutral-50";
+    default:
+      return "bg-neutral-800 text-neutral-50";
+  }
+};
+
 const getDuration = (start?: Date | null, end?: Date | null) => {
   if (!start || !end) return null;
   const diffMs = new Date(end).getTime() - new Date(start).getTime();
@@ -21,49 +32,55 @@ const getDuration = (start?: Date | null, end?: Date | null) => {
 };
 
 export default function GameCard({ game }: { game: Game }) {
-  const whiteName = game.whitePlayer?.name ?? "White";
-  const blackName = game.blackPlayer?.name ?? "Black";
   const duration = getDuration(game.startedAt, game.endedAt);
 
   return (
-    <div className="border border-neutral-600 rounded-lg p-6 hover:border-neutral-500 transition-colors">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex-1">
-          <div className="flex items-center gap-3 mb-2">
-            <User size={20} className="text-neutral-400" />
-            <h3 className="text-xl font-semibold">
-              {whiteName} vs {blackName}
-            </h3>
+    <div className="border border-neutral-600 rounded-lg p-4 hover:border-neutral-500 transition-colors">
+      <div className="flex items-center justify-between gap-4">
+        {/* Players & Result */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-1">
+            <User size={16} className="text-neutral-400" />
+            <span className="truncate font-medium">{game.name}</span>
             <span
-              className={`px-3 py-1 rounded-full text-xs font-semibold uppercase ${getResultBadge(
-                game.result
+              className={`px-2 py-0.5 rounded-full text-xs font-semibold uppercase ${getResultBadge(
+                game.result ?? game.status
               )}`}
             >
               {game.result ?? game.status}
             </span>
           </div>
 
-          <div className="flex flex-wrap gap-4 text-sm text-neutral-400">
+          {/* Game meta */}
+          <div className="flex flex-wrap gap-3 text-xs text-neutral-400">
             <div className="flex items-center gap-1">
-              <Calendar size={16} />
+              <Calendar size={14} />
               {new Date(game.createdAt).toLocaleDateString()}
             </div>
             {duration && (
               <div className="flex items-center gap-1">
-                <Clock size={16} />
+                <Clock size={14} />
                 {duration} min
               </div>
             )}
             <div className="flex items-center gap-1">
-              <Trophy size={16} />
-              {game.moves?.length} moves
+              <Trophy size={14} />
+              {game.moves?.length ?? 0} moves
             </div>
           </div>
         </div>
 
-        <div className="text-right">
-          <div className="text-sm text-neutral-400 mb-1">Game Type</div>
-          <div className="font-medium capitalize">{game.type}</div>
+        {/* Game type */}
+        <div className="flex flex-col items-end gap-1">
+          <div className="text-xs text-neutral-400">Type</div>
+          <div
+            className={`px-2 py-0.5 rounded-full text-xs font-medium capitalize flex items-center gap-1 ${getGameTypeBadge(
+              game.type
+            )}`}
+          >
+            {game.type}
+            {game.type === GameType.PRIVATE && <Lock size={12} />}
+          </div>
         </div>
       </div>
     </div>

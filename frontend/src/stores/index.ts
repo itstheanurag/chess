@@ -1,4 +1,4 @@
 export * from "./authStore";
 export * from "./chatStore";
-export * from "./chessStore";
+export * from "./games";
 export * from "./dashboardStore";

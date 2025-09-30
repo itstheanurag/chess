@@ -1,9 +1,14 @@
 import api from "@/lib/axios";
-import { CreateGameData, Game, JoinGameData, SearchGame } from "@/types";
+import { CreateGameData, Game, JoinGameData, SearchGame, Stats } from "@/types";
 
-export const listGames = async (
+export const callListGameApi = async (
   filters?: SearchGame
-): Promise<{ games: Game[] } | null> => {
+): Promise<{
+  games: Game[];
+  total: number;
+  page: number;
+  size: number;
+} | null> => {
   try {
     const response = await api.get("/games/list", { params: filters });
     return response.data.data ?? [];
@@ -13,7 +18,7 @@ export const listGames = async (
   }
 };
 
-export const createGame = async (
+export const callCreateGameApi = async (
   data: CreateGameData
 ): Promise<Game | null> => {
   try {
@@ -25,7 +30,9 @@ export const createGame = async (
   }
 };
 
-export const joinGame = async (data: JoinGameData): Promise<Game | null> => {
+export const callJoinGameApi = async (
+  data: JoinGameData
+): Promise<Game | null> => {
   try {
     const response = await api.post(
       `/games/${data.gameId}/join`,
@@ -38,10 +45,22 @@ export const joinGame = async (data: JoinGameData): Promise<Game | null> => {
   }
 };
 
-export const getGame = async (gameId: string): Promise<Game | null> => {
+export const callGetGameApi = async (gameId: string): Promise<Game | null> => {
   try {
     const response = await api.get(`/games/${gameId}`);
     return response.data.data ?? null;
+  } catch (error) {
+    console.error("Error fetching game:", error);
+    return null;
+  }
+};
+
+export const callGetAllGameStatsApi = async (): Promise<{
+  stats: Stats;
+} | null> => {
+  try {
+    const response = await api.get(`/games/stats`);
+    return response.data?.data ?? null;
   } catch (error) {
     console.error("Error fetching game:", error);
     return null;

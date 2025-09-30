@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { flushLocalTokens, getToken, saveToken } from "@/utils";
+import { errorToast } from "@/utils/toast";
 import axios, { AxiosError } from "axios";
 
 const api = axios.create({
@@ -31,6 +32,13 @@ api.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
     const originalRequest: any = error.config;
+
+    // Network or CORS errors
+    if (!error.response) {
+      console.error("Network error or backend unreachable:", error);
+      errorToast("Cannot connect to server. Please check your connection.");
+      return Promise.reject(error);
+    }
 
     if (originalRequest.url?.includes("/auth/refresh")) {
       return Promise.reject(error);
@@ -65,14 +73,11 @@ api.interceptors.response.use(
         saveToken("accessToken", newAccessToken);
         api.defaults.headers.common.Authorization = `Bearer ${newAccessToken}`;
 
-        // Retry all queued requests
         failedQueue.forEach((req) => {
           req.config.headers.Authorization = `Bearer ${newAccessToken}`;
           req.resolve(api(req.config));
         });
         failedQueue = [];
-
-        // Retry the original request
         return api({
           ...originalRequest,
           headers: {
@@ -81,7 +86,6 @@ api.interceptors.response.use(
           },
         });
       } catch (refreshError) {
-        // Reject all queued requests
         failedQueue.forEach((req) => req.reject(refreshError));
         failedQueue = [];
 
@@ -92,6 +96,8 @@ api.interceptors.response.use(
         isRefreshing = false;
       }
     }
+
+    return Promise.reject(error);
   }
 );
 

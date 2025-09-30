@@ -13,8 +13,8 @@ import {
   RegisterResponseData,
   ServerResponse,
 } from "@/types/server";
-import { error, success } from "../toast";
 import { handleError } from "../errors";
+import { errorToast, successToast } from "../toast";
 
 export const loginUser = async (
   data: LoginData
@@ -27,7 +27,7 @@ export const loginUser = async (
 
     if (response.status !== 200) {
       console.error("Login failed: status code", response.status);
-      error("Login failed. Please try again.");
+      errorToast("Login failed. Please try again.");
       return null;
     }
 
@@ -35,14 +35,14 @@ export const loginUser = async (
 
     console.log(responseData);
     if (!responseData.success) {
-      error(responseData.message || "Login failed");
+      errorToast(responseData.message || "Login failed");
       return null;
     }
 
     const serverData = responseData.data;
 
     if (!serverData || !serverData.tokens) {
-      error("Invalid server response");
+      errorToast("Invalid server response");
       return null;
     }
 
@@ -60,7 +60,7 @@ export const loginUser = async (
     saveUser(user);
     saveToken("accessToken", tokens.accessToken);
     saveToken("refreshToken", tokens.refreshToken);
-    success(responseData.message || "Logged in successfully");
+    successToast(responseData.message || "Logged in successfully");
 
     return { user, tokens };
   } catch (err: unknown) {
@@ -78,10 +78,10 @@ export const registerUser = async (data: RegisterData): Promise<null> => {
 
     if (!response.data.success || !response.data.data) {
       console.error("Registration failed");
-      error(response.data.message);
+      errorToast(response.data.message);
       return null;
     }
-    success(response.data.message);
+    successToast(response.data.message);
     return null;
   } catch (err) {
     console.error("Registration error:", err);

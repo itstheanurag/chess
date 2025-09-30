@@ -1,29 +1,8 @@
-import { Game, GameType } from "@/types";
-import { useEffect } from "react";
-import GameCard from "./GameCard";
-import GameStats from "./GameStats";
 import CreatGame from "./CreateGame";
-import { useGameStore } from "@/stores";
+import GameStats from "./GameStats";
+import PaginatedGamesCards from "./PaginatedCards";
 
 const ChessGamesPage = () => {
-  const { listGames, userGames } = useGameStore();
-
-  useEffect(() => {
-    const fetchGames = async () => {
-      listGames();
-    };
-
-    fetchGames();
-  }, [listGames]);
-
-  const games = Array.isArray(userGames) ? userGames : [];
-  const stats = {
-    total: games.length,
-    wins: games.filter((g) => g.result === "win").length,
-    losses: games.filter((g) => g.result === "loss").length,
-    draws: games.filter((g) => g.result === "draw").length,
-  };
-
   return (
     <div className="min-h-screen p-4 sm:p-6">
       <div className="max-w-6xl mx-auto">
@@ -42,16 +21,11 @@ const ChessGamesPage = () => {
           </div>
         </div>
 
-        <GameStats stats={stats} />
+        <GameStats />
 
-        <div className="space-y-4">
-          {games.map((game: Game) => (
-            <GameCard key={game.id} game={game} />
-          ))}
-        </div>
+        <PaginatedGamesCards />
       </div>
     </div>
   );
 };
-
 export default ChessGamesPage;
