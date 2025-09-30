@@ -3,13 +3,17 @@ import { ChessGame } from "@/games/chess.game";
 import { Square } from "chess.js";
 import { sendResponse, sendError } from "@/utils/helper";
 import { AuthenticatedRequest } from "@/types";
-import { createGameSchema, GameStatus, GameType } from "@/schema/game";
+import {
+  createGameSchema,
+  GameStatus,
+  GameType,
+  paginatedGameSearchSchema,
+} from "@/schema/game";
 import prisma from "@/libs/db";
 
 export const createGame = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const userId = req.user!.id;
-    console.log(userId);
     const result = createGameSchema.safeParse(req.body);
     if (!result.success) {
       return sendError(res, 400, "Invalid request", result.error);
@@ -261,12 +265,35 @@ export const getValidMoves = async (req: Request, res: Response) => {
 
 export const listGames = async (req: Request, res: Response) => {
   try {
-    const { status, type } = req.query;
-    const where: any = {};
-    if (status && typeof status === "string")
-      where.status = status.toUpperCase();
+    const result = paginatedGameSearchSchema.safeParse(req.query);
+    if (!result.success) {
+      return sendError(res, 400, "Invalid request", result.error);
+    }
 
-    if (type && typeof type === "string") where.type = type.toUpperCase();
+    const { q, page, size, status, type } = result.data;
+
+    const pageNum = +(page ?? 1);
+    const pageSize = +(size ?? 15);
+    const skip = (pageNum - 1) * pageSize;
+
+    const where: any = {};
+
+    if (status && typeof status === "string") {
+      where.status = status.toUpperCase();
+    }
+
+    if (type && typeof type === "string") {
+      where.type = type.toUpperCase();
+    }
+
+    if (q && typeof q === "string" && q.trim().length > 0) {
+      where.OR = [
+        { name: { contains: q, mode: "insensitive" } },
+        { notes: { contains: q, mode: "insensitive" } },
+      ];
+    }
+
+    const totalEntries = await prisma.game.count({ where });
 
     const games = await prisma.game.findMany({
       where,
@@ -297,12 +324,23 @@ export const listGames = async (req: Request, res: Response) => {
         },
       },
       orderBy: { createdAt: "desc" },
-      take: 50,
+      skip,
+      take: pageSize,
     });
 
-    return sendResponse(res, 200, { games }, "Games fetched successfully");
+    return sendResponse(
+      res,
+      200,
+      {
+        games,
+        page: pageNum,
+        size: pageSize,
+        totalEntries,
+      },
+      "Games fetched successfully"
+    );
   } catch (error) {
-    // console.error("Error listing games:", error);
+    console.error("Error listing games:", error);
     return sendError(
       res,
       500,
