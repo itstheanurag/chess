@@ -1,8 +1,6 @@
 import { Chess, Move, Square, Color } from "chess.js";
 import { GameState, GameMoveResult, GameStatus } from "@/types";
 
-export const activeGames: Record<string, ChessGame> = {};
-
 export class ChessGame extends Chess {
   private players: { white?: string; black?: string } = {};
   private spectators: Set<string> = new Set();
@@ -11,9 +9,30 @@ export class ChessGame extends Chess {
     super(fen);
   }
 
-  joinPlayer(playerName: string): Color {
-    if (!this.players.white) return (this.players.white = playerName), "w";
-    if (!this.players.black) return (this.players.black = playerName), "b";
+  joinPlayer(playerName: string, preferredColor?: Color): Color {
+    if (this.players.white === playerName) return "w";
+    if (this.players.black === playerName) return "b";
+
+    if (preferredColor === "w" && !this.players.white) {
+      this.players.white = playerName;
+      return "w";
+    }
+
+    if (preferredColor === "b" && !this.players.black) {
+      this.players.black = playerName;
+      return "b";
+    }
+
+    if (!this.players.white) {
+      this.players.white = playerName;
+      return "w";
+    }
+
+    if (!this.players.black) {
+      this.players.black = playerName;
+      return "b";
+    }
+
     throw new Error("Game is full");
   }
 

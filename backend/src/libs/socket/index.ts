@@ -19,9 +19,6 @@ export const startSocketServer = (server: HttpServer) => {
   };
 
   Object.entries(namespaces).forEach(([name, nsp]) => {
-    // const requiresAuth = name === "game";
-    // nsp.use(socketAuthGuard(requiresAuth));
-
     if (name === "game") initializeGameNamespace(nsp);
     if (name === "chat") initializeChatNamespace(nsp);
 

@@ -2,6 +2,7 @@ import { Socket } from "socket.io";
 import jwt from "jsonwebtoken";
 import type { JwtPayload } from "jsonwebtoken";
 import { config, JWT_CONFIG } from "@/config";
+import { JwtPayloadOptions } from "@/types";
 
 // Extend the Socket interface to include the user property
 declare module "socket.io" {
@@ -34,15 +35,15 @@ export const socketAuthGuard = (isAuthRequired: boolean = true) => {
       }
 
       try {
-        // Verify token
         const decoded = jwt.verify(
           token,
           JWT_CONFIG.accessTokenSecret
-        ) as JwtPayload;
+        ) as JwtPayloadOptions;
+
         socket.user = decoded;
         next();
       } catch (error) {
-        console.error("Socket authentication error:", error);
+        // console.error("Socket authentication error:", error);
 
         if (isAuthRequired) {
           return next(new Error("Authentication error: Invalid token"));
@@ -50,7 +51,7 @@ export const socketAuthGuard = (isAuthRequired: boolean = true) => {
         next();
       }
     } catch (error) {
-      console.error("Error in socket authentication middleware:", error);
+      // console.error("Error in socket authentication middleware:", error);
       return next(new Error("Internal server error during authentication"));
     }
   };
