@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { register, login, refreshAccessToken } from "@/handler";
-import { authGuard } from "@/middlewares";
+import { register, login, refreshAccessToken, logout } from "@/handler";
+import { authGuard, refreshTokenGuard } from "@/middlewares";
 
 const AuthRouter: Router = Router();
 
@@ -23,14 +23,14 @@ AuthRouter.post("/login", login);
  * @desc    Get current user data
  * @access  Private
  */
-AuthRouter.post("/refresh", authGuard, refreshAccessToken);
+AuthRouter.post("/refresh", refreshTokenGuard, refreshAccessToken);
 
 /**
  * @route   GET /auth/me
  * @desc    Get current user data
  * @access  Private
  */
-AuthRouter.post("/logout", authGuard, refreshAccessToken);
+AuthRouter.post("/logout", authGuard, logout);
 
 /**
  * @route   GET /auth/health

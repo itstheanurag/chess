@@ -79,3 +79,41 @@ export const roleGuard = (roles: string | string[]) => {
     next();
   };
 };
+
+export async function refreshTokenGuard(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<Response | void> {
+  const secret = process.env.JWT_REFRESH_SECRET!;
+
+  if (!secret) {
+    return sendError(res, 500, "Server configuration error");
+  }
+
+  const refreshToken = req.body.token;
+  if (!refreshToken) {
+    return sendError(res, 401, "Refresh token missing");
+  }
+
+  try {
+    const decoded = jwt.verify(refreshToken, secret);
+
+    if (!isJwtPayloadOptions(decoded)) {
+      return sendError(res, 403, "Invalid refresh token payload");
+    }
+
+    const redisKey = `${REDIS_KEYS.refreshTokenKey}:${decoded.id}`;
+    const storedToken = await redisClient.get(redisKey);
+
+    if (!storedToken || storedToken !== refreshToken) {
+      return sendError(res, 403, "Refresh token expired or invalid");
+    }
+
+    req.user = decoded;
+    next();
+  } catch (err) {
+    // console.error("Refresh token verification failed:", err);
+    return sendError(res, 403, "Invalid or expired refresh token");
+  }
+}

@@ -83,3 +83,16 @@ model GameSpectator {
   @@unique([gameId, spectatorId])
   @@map("game_spectator")
 }
+
+
+model GameMessages {
+  id           String    @id @default(uuid()) @db.Uuid
+  gameId       String    @map("game_id") @db.Uuid
+  message      String    @map("message") @db.Text
+  sentAt     DateTime  @default(now()) @map("sent_at")
+
+  game         Game      @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  spectator    User      @relation(fields: [spectatorId], references: [id], onDelete: Cascade)
+
+  @@map("game_messages")
+}
