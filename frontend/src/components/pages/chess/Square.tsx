@@ -13,8 +13,8 @@ const Square: React.FC<SquareProps> = ({
     <div
       onClick={onClick}
       className={`relative aspect-square w-full flex items-center justify-center cursor-pointer
-        ${isLight ? "bg-neutral-100" : "bg-gray-700"}
-        ${isSelected ? "ring-2 ring-yellow-400" : ""}`}
+    ${isLight ? "bg-amber-200" : "bg-yellow-900"}
+    ${isSelected ? "ring-2 ring-yellow-400" : ""}`}
     >
       {highlight && (
         <div className="absolute w-4 h-4 rounded-full bg-green-500/70 pointer-events-none" />

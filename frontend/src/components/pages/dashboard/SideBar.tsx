@@ -4,7 +4,6 @@ import {
   LogOut,
   Activity,
   Clock,
-  Gamepad2,
   Plus,
   Target,
   Trophy,
@@ -12,25 +11,41 @@ import {
 } from "lucide-react";
 import AuthUser from "../auth/User";
 import { useAuthStore, useUIStore } from "@/stores";
+import { useNavigate } from "react-router-dom";
 
 interface SidebarProps {
   isDrawerOpen: boolean;
   toggleDrawer: () => void;
 }
 
+const menuItems = [
+  { id: "dashboard", icon: Activity, label: "Dashboard", path: "/dashboard" },
+  {
+    id: "chess",
+    icon: Plus,
+    label: "Create Game",
+    path: "/dashboard/create-game",
+  },
+  {
+    id: "activity",
+    icon: Clock,
+    label: "Activity",
+    path: "/dashboard/activity",
+  },
+  {
+    id: "leaderboard",
+    icon: Trophy,
+    label: "Leaderboard",
+    path: "/dashboard/leaderboard",
+  },
+  { id: "puzzles", icon: Target, label: "Puzzles", path: "/dashboard/puzzles" },
+  { id: "friends", icon: Users, label: "Friends", path: "/dashboard/friends" },
+];
+
 const Sidebar: React.FC<SidebarProps> = ({ isDrawerOpen, toggleDrawer }) => {
   const { logout } = useAuthStore();
-  const { activeSection, setActiveSection, collapsed, toggleCollapse } =
-    useUIStore();
-
-  const menuItems = [
-    { id: "dashboard", icon: Activity, label: "Dashboard" },
-    { id: "chess", icon: Plus, label: "Create Game" },
-    { id: "activity", icon: Clock, label: "Activity" },
-    { id: "leaderboard", icon: Trophy, label: "Leaderboard" },
-    { id: "puzzles", icon: Target, label: "Puzzles" },
-    { id: "friends", icon: Users, label: "Friends" },
-  ];
+  const { collapsed, toggleCollapse } = useUIStore();
+  const navigate = useNavigate();
 
   return (
     <>
@@ -50,14 +65,9 @@ const Sidebar: React.FC<SidebarProps> = ({ isDrawerOpen, toggleDrawer }) => {
           }
         `}
       >
-        <div className=" hidden md:flex items-center justify-between p-3 border-b border-neutral-200 lg:justify-start">
-          {!collapsed && (
-            <div className="">
-              <AuthUser />
-            </div>
-          )}
+        <div className="hidden md:flex items-center justify-between p-3 border-b border-neutral-200 lg:justify-start">
+          {!collapsed && <AuthUser />}
 
-          {/* Collapse toggle */}
           <button
             onClick={toggleCollapse}
             className={`${
@@ -73,29 +83,19 @@ const Sidebar: React.FC<SidebarProps> = ({ isDrawerOpen, toggleDrawer }) => {
             <ul className="space-y-2">
               {menuItems.map((item) => {
                 const Icon = item.icon;
-                const isActive = activeSection === item.id;
                 return (
                   <li key={item.id}>
                     <button
                       onClick={() => {
-                        setActiveSection(item.id);
-                        toggleDrawer(); // close drawer after selection
+                        navigate(item.path);
                       }}
                       className={`
                         flex items-center justify-center lg:justify-start
                         w-full p-3 lg:px-4 rounded-lg transition-colors
-                        ${
-                          isActive
-                            ? "bg-neutral-100 text-neutral-900"
-                            : "text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900"
-                        }
+                        text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900
                       `}
                     >
-                      <Icon
-                        className={`h-5 w-5 ${
-                          isActive ? "text-neutral-900" : "text-neutral-500"
-                        }`}
-                      />
+                      <Icon className="h-5 w-5 text-neutral-500" />
                       {!collapsed && (
                         <span className="ml-3 hidden lg:inline font-medium">
                           {item.label}
@@ -108,6 +108,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isDrawerOpen, toggleDrawer }) => {
             </ul>
           </nav>
         </div>
+
         {/* Footer */}
         <div className="p-4 border-t border-neutral-200 flex flex-col space-y-2">
           <button className="w-full flex items-center justify-center lg:justify-start space-x-3 px-4 rounded-lg text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900 transition-colors">

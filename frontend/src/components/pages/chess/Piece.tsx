@@ -44,8 +44,8 @@ const Piece: React.FC<PieceProps> = ({ type, color }) => {
     <div
       className={`text-2xl sm:text-3xl md:text-4xl lg:text-5xl ${
         color == "w"
-          ? "text-neutral-400 drop-shadow-lg shadow-white"
-          : "text-neutral-900 drop-shadow-lg"
+          ? "text-neutral-100 drop-shadow-lg shadow-white"
+          : "text-neutral-800 drop-shadow-lg"
       }`}
     >
       <Icon />

@@ -1,32 +1,23 @@
 import React, { useState } from "react";
-import ChessDashboard from "./Dashboard";
+import { Outlet, useLocation } from "react-router-dom";
+import { AnimatePresence, motion, easeInOut } from "framer-motion";
 import { useUIStore } from "@/stores";
 import Sidebar from "./SideBar";
 import { Menu } from "lucide-react";
-import ChessGamesPage from "./Games/GameCreatePage";
-import GameCreatePage from "./Games/GameCreatePage";
 
-interface DashboardLayoutProps {
-  children?: React.ReactNode;
-}
+const pageVariants = {
+  initial: { opacity: 0, scale: 0.95 },
+  animate: { opacity: 1, scale: 1 },
+  exit: { opacity: 0, scale: 0.95 },
+};
 
-const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
+
+const DashboardLayout: React.FC = () => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const { activeSection, collapsed } = useUIStore();
-  const toggleDrawer = () => setIsDrawerOpen(!isDrawerOpen);
+  const location = useLocation();
 
-  const renderContent = () => {
-    switch (activeSection) {
-      case "dashboard":
-        return <ChessDashboard />;
-      case "chess":
-        return <GameCreatePage />;
-      case "Game":
-        return <ChessGamesPage />;
-      default:
-        return <div>Coming soon...</div>;
-    }
-  };
+  const toggleDrawer = () => setIsDrawerOpen(!isDrawerOpen);
 
   return (
     <div className="min-h-screen bg-neutral-50 flex">
@@ -37,6 +28,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
           collapsed ? "lg:ml-20" : "lg:ml-80"
         } md:ml-0`}
       >
+        {/* Header */}
         <div className="sticky top-0 z-10 w-full bg-white border-b border-neutral-200 p-3 flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <button
@@ -51,7 +43,20 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
             </div>
           </div>
         </div>
-        <div className="p-4">{children ?? renderContent()}</div>
+
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={location.pathname}
+            variants={pageVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            transition={{ duration: 0.35, ease: easeInOut }}
+            className="p-4"
+          >
+            <Outlet />
+          </motion.div>
+        </AnimatePresence>
       </div>
     </div>
   );
