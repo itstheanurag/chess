@@ -33,7 +33,6 @@ export const loginUser = async (
 
     const responseData = response.data;
 
-    console.log(responseData);
     if (!responseData.success) {
       errorToast(responseData.message || "Login failed");
       return null;

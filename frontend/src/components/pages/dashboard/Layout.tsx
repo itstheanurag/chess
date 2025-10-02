@@ -3,13 +3,16 @@ import ChessDashboard from "./Dashboard";
 import { useUIStore } from "@/stores";
 import Sidebar from "./SideBar";
 import { Menu } from "lucide-react";
-import CreateGameModal from "./Games/CreateGame";
-import ChessGamesPage from "./Games/ChessGamePage";
+import ChessGamesPage from "./Games/GameCreatePage";
+import GameCreatePage from "./Games/GameCreatePage";
 
-const DashboardLayout = () => {
-  const { activeSection, collapsed } = useUIStore();
+interface DashboardLayoutProps {
+  children?: React.ReactNode;
+}
+
+const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-
+  const { activeSection, collapsed } = useUIStore();
   const toggleDrawer = () => setIsDrawerOpen(!isDrawerOpen);
 
   const renderContent = () => {
@@ -17,7 +20,7 @@ const DashboardLayout = () => {
       case "dashboard":
         return <ChessDashboard />;
       case "chess":
-        return <ChessGamesPage />;
+        return <GameCreatePage />;
       case "Game":
         return <ChessGamesPage />;
       default:
@@ -48,9 +51,7 @@ const DashboardLayout = () => {
             </div>
           </div>
         </div>
-
-        {/* Content */}
-        <div className="p-4">{renderContent()}</div>
+        <div className="p-4">{children ?? renderContent()}</div>
       </div>
     </div>
   );

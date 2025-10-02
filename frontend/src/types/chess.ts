@@ -59,7 +59,6 @@ export interface GameMove {
   promotion?: string | null;
   fen: string;
   createdAt: Date;
-
   game: Game;
   player?: AuthUser | null;
 }
@@ -100,6 +99,7 @@ export interface GameStoreState {
   setGameName: (name: string) => void;
   setGameType: (type: GameType) => void;
   setNotes: (notes: string) => void;
+  findOne: (id: string) => Promise<Game | null>;
 }
 
 export interface GameSocketState {

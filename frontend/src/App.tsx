@@ -14,13 +14,19 @@ import Login from "./components/pages/auth/Login";
 import Register from "./components/pages/auth/SignUp";
 import { useAuthStore } from "./stores";
 import DashboardLayout from "./components/pages/dashboard/Layout";
+import ChessGamePage from "./components/pages/chess/ChessGamePage";
 
 interface ProtectedRouteProps {
   children: React.ReactElement;
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const { authUser } = useAuthStore();
+  const { authUser, isLoading } = useAuthStore();
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
   if (!authUser) return <Navigate to="/login" replace />;
   return children;
 };
@@ -106,6 +112,17 @@ const AnimatedRoutes: React.FC = () => {
               >
                 <DashboardLayout />
               </motion.div>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/game/:gameId"
+          element={
+            <ProtectedRoute>
+              <DashboardLayout>
+                <ChessGamePage />
+              </DashboardLayout>
             </ProtectedRoute>
           }
         />

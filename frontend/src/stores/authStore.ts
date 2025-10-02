@@ -43,7 +43,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         email: get().email,
         password: get().password,
       };
-
       await registerUser(state);
     } catch (err) {
       console.error("Register error in store:", err);
@@ -62,10 +61,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
       const result = await loginUser(state);
       if (!result) return;
-
-      console.log("result from the auth user ", result);
       set({ authUser: result.user });
-      console.log("Logged in user:", result.user);
     } catch (err) {
       console.error("Login error in store:", err);
     } finally {
@@ -76,8 +72,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   logout: async () => {
     try {
       await logoutUser();
+      localStorage.removeItem("authUser");
       set({ authUser: null });
-      console.log("Logged out successfully");
     } catch (err) {
       console.error("Logout error in store:", err);
     }

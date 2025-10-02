@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import type { Piece } from "@/types/chess";
 import { convertToSquare } from "@/utils";
 import Square from "./Square";
-import { useGameStore } from "@/stores";
+import { useGameSocketStore } from "@/stores/games/socketStore";
 type ChessBoardProps = { board: (Piece | null)[][] };
 
 const ChessBoard: React.FC<ChessBoardProps> = ({ board: initialBoard }) => {
@@ -13,8 +13,7 @@ const ChessBoard: React.FC<ChessBoardProps> = ({ board: initialBoard }) => {
     selectPiece,
     makeMove,
     clearSelection,
-    playerName,
-  } = useGameStore();
+  } = useGameSocketStore();
 
   const [board, setBoard] = useState(initialBoard);
 
@@ -33,7 +32,7 @@ const ChessBoard: React.FC<ChessBoardProps> = ({ board: initialBoard }) => {
     const piece = getPieceAt(gameState.board, r, c);
 
     if (selected) {
-      makeMove({ from: selected, to: square });
+      // makeMove({ from: selected, to: square });
       clearSelection();
     } else if (piece) {
       selectPiece(square);
@@ -42,7 +41,7 @@ const ChessBoard: React.FC<ChessBoardProps> = ({ board: initialBoard }) => {
 
   return (
     <>
-      <p>You are Player: {playerName}</p>
+      <p>You are Player: {"playerName"}</p>
       <div className="grid grid-cols-8 aspect-square w-full max-w-[500px] border-4 border-gray-800">
         {board.map((row, rIdx) =>
           row.map((piece, cIdx) => {

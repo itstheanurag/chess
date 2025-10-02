@@ -1,5 +1,10 @@
 import { create } from "zustand";
-import { callCreateGameApi, callJoinGameApi, callListGameApi } from "@/utils";
+import {
+  callCreateGameApi,
+  callGetGameApi,
+  callJoinGameApi,
+  callListGameApi,
+} from "@/utils";
 import {
   CreateGameData,
   GameStoreState,
@@ -46,6 +51,10 @@ export const useGameStore = create<GameStoreState>((set, get) => {
           total: result.total,
         });
       }
+    },
+
+    findOne: async (id: string) => {
+      return await callGetGameApi(id);
     },
 
     joinGame: async (data: JoinGameData) => {

@@ -1,8 +1,7 @@
 import CreatGame from "./CreateGame";
-import GameStats from "./GameStats";
 import PaginatedGamesCards from "./PaginatedCards";
 
-const ChessGamesPage = () => {
+const GameCreatePage = () => {
   return (
     <div className="min-h-screen p-4 sm:p-6">
       <div className="max-w-6xl mx-auto">
@@ -25,4 +24,4 @@ const ChessGamesPage = () => {
     </div>
   );
 };
-export default ChessGamesPage;
+export default GameCreatePage;

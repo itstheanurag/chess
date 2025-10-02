@@ -2,17 +2,12 @@ import { useState, useEffect } from "react";
 import GameCard from "./GameCard";
 import { useGameStore } from "@/stores";
 import { GameStatusEnum, GameType, SearchGame } from "@/types";
-import {
-  ChevronLeft,
-  ChevronRight,
-  Search,
-  Activity,
-  Lock,
-  Globe,
-} from "lucide-react";
+import { ChevronLeft, ChevronRight, Search } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export default function PaginatedGamesCards() {
   const { userGames, listGames, currentPage, pages, total } = useGameStore();
+  const navigate = useNavigate();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -63,7 +58,7 @@ export default function PaginatedGamesCards() {
           <input
             type="text"
             placeholder="Search games..."
-            className="w-full pl-7 pr-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+            className="w-full pl-7 pr-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 "
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -104,19 +99,22 @@ export default function PaginatedGamesCards() {
         </select>
       </div>
 
-      {/* Game Cards */}
       <div className="space-y-4">
         {userGames.map((game) => (
-          <GameCard key={game.id} game={game} />
+          <div
+            key={game.id}
+            onClick={() => navigate(`/game/${game.id}`)}
+            className="cursor-pointer"
+          >
+            <GameCard game={game} />
+          </div>
         ))}
       </div>
-
-      {/* Pagination */}
       <div className="flex justify-center items-center gap-3 mt-6">
         <button
           disabled={page === 1 || loading}
           onClick={() => setPage((p) => p - 1)}
-          className="flex items-center px-4 py-2 rounded-lg bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition"
+          className="flex items-center px-4 py-2 rounded-lg bg-neutral-800 text-neutral-50 hover:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed transition"
         >
           <ChevronLeft size={16} />
           <span className="ml-1">Prev</span>
@@ -129,7 +127,7 @@ export default function PaginatedGamesCards() {
         <button
           disabled={page === pages || loading}
           onClick={() => setPage((p) => p + 1)}
-          className="flex items-center px-4 py-2 rounded-lg bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition"
+          className="flex items-center px-4 py-2 rounded-lg bg-neutral-800 text-neutral-50 hover:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed transition"
         >
           <span className="mr-1">Next</span>
           <ChevronRight size={16} />
