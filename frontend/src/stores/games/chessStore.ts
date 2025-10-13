@@ -43,6 +43,7 @@ export const useGameStore = create<GameStoreState>((set, get) => {
 
     listGames: async (filters?: SearchGame) => {
       const result = await callListGameApi(filters);
+
       if (result) {
         set({
           userGames: result.games,
@@ -58,7 +59,8 @@ export const useGameStore = create<GameStoreState>((set, get) => {
     },
 
     joinGame: async (data: JoinGameData) => {
-      await callJoinGameApi(data);
+      const dataReturned = await callJoinGameApi(data);
+      return dataReturned ? true : false;
     },
   };
 });

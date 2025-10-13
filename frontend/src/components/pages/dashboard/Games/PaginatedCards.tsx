@@ -101,12 +101,8 @@ export default function PaginatedGamesCards() {
 
       <div className="space-y-4 border border-neutral-200 p-4 rounded-lg">
         {userGames.map((game) => (
-          <div
-            key={game.id}
-            onClick={() => navigate(`/dashboard/game/${game.id}`)}
-            className="cursor-pointer"
-          >
-            <GameCard game={game} />
+          <div key={game.id}>
+            <GameCard key={game.id} game={game} />
           </div>
         ))}
       </div>

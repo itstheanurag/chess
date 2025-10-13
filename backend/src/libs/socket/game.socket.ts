@@ -58,7 +58,6 @@ export const initializeGameNamespace = (nsp: Namespace) => {
 
       const state = game.getState();
 
-      // check if the user is actually a player in this game
       let playerColor: "w" | "b" | null = null;
       if (state.whitePlayer === userId) playerColor = "w";
       else if (state.blackPlayer === userId) playerColor = "b";
@@ -116,6 +115,18 @@ export const initializeGameNamespace = (nsp: Namespace) => {
       await cacheGame(gameId, game);
 
       nsp.to(gameId).emit("gameReset", { gameState: game.getState() });
+    });
+
+    socket.on("leaveGame", async (gameId: string) => {
+      const game = await loadGame(gameId, prisma);
+      if (!game) return;
+      socket.leave(gameId);
+      const user = socket.user as JwtPayloadOptions;
+      const userId = user.sub;
+
+      // game.removePlayerOrSpectator(userId);
+      await cacheGame(gameId, game);
+      socket.to(gameId).emit("playerLeft", { userId });
     });
 
     /**

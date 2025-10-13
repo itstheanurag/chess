@@ -44,17 +44,17 @@ export const useChatStore = create<ChatState>((set, get) => {
       console.log("Chat socket disconnected manually");
     },
 
-    joinRoom: (roomId: string) => {
+    joinGame: (roomId: string) => {
       get().connect();
       if (!chatSocket) return;
 
-      chatSocket.emit("joinRoom", { roomId });
+      chatSocket.emit("joinChat", { roomId });
     },
 
-    leaveRoom: (roomId: string) => {
+    leaveGame: (roomId: string) => {
       if (!chatSocket) return;
 
-      chatSocket.emit("leaveRoom", { roomId });
+      chatSocket.emit("leaveGame", { roomId });
       set({ messages: [] });
     },
 

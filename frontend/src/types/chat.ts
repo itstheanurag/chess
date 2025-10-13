@@ -13,8 +13,8 @@ export interface ChatState {
   messages: ChatMessage[];
   connect: () => void;
   disconnect: () => void;
-  joinRoom: (roomId: string) => void;
-  leaveRoom: (roomId: string) => void;
+  joinGame: (roomId: string) => void;
+  leaveGame: (roomId: string) => void;
   sendMessage: (roomId: string, message: string) => void;
   addMessage: (msg: ChatMessage) => void;
 }

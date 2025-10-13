@@ -41,7 +41,7 @@ export interface GameStateData {
 }
 
 export interface GameSpectator {
-  id: bigint;
+  id: string;
   gameId: bigint;
   spectatorId: bigint;
   joinedAt: Date;
@@ -50,7 +50,7 @@ export interface GameSpectator {
 }
 
 export interface GameMove {
-  id: bigint;
+  id: string;
   gameId: bigint;
   moveNumber: number;
   playerId?: bigint | null;
@@ -64,7 +64,7 @@ export interface GameMove {
 }
 
 export interface Game {
-  id: bigint;
+  id: string;
   name?: string;
   notes?: string;
   whitePlayerId?: bigint | null;
@@ -93,7 +93,7 @@ export interface GameStoreState {
   currentPage: number;
   total: number;
 
-  joinGame: (data: JoinGameData) => void;
+  joinGame: (data: JoinGameData) => Promise<boolean>;
   createGame: (data?: { passcode?: string; blackPlayerId?: string }) => void;
   listGames: (filters?: SearchGame) => Promise<void>;
   setGameName: (name: string) => void;
