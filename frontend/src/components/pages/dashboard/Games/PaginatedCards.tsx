@@ -99,7 +99,7 @@ export default function PaginatedGamesCards() {
         </select>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-4 border border-neutral-200 p-4 rounded-lg">
         {userGames.map((game) => (
           <div
             key={game.id}
@@ -110,9 +110,10 @@ export default function PaginatedGamesCards() {
           </div>
         ))}
       </div>
+
       <div className="flex justify-center items-center gap-3 mt-6">
         <button
-          disabled={page === 1 || loading}
+          disabled={loading || page === 1 || total === 0}
           onClick={() => setPage((p) => p - 1)}
           className="flex items-center px-4 py-2 rounded-lg bg-neutral-800 text-neutral-50 hover:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed transition"
         >
@@ -125,7 +126,7 @@ export default function PaginatedGamesCards() {
         </span>
 
         <button
-          disabled={page === pages || loading}
+          disabled={loading || page >= pages || total === 0}
           onClick={() => setPage((p) => p + 1)}
           className="flex items-center px-4 py-2 rounded-lg bg-neutral-800 text-neutral-50 hover:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed transition"
         >

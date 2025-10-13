@@ -21,8 +21,16 @@ const Register: React.FC = () => {
     e.preventDefault();
     if (!isFormValid) return;
 
-    await register();
-    navigate("/login");
+    try {
+      const success = await register();
+      if (success) {
+        navigate("/login");
+      } else {
+        console.error("Registration failed");
+      }
+    } catch (err) {
+      console.error("Registration error:", err);
+    }
   };
 
   return (

@@ -25,9 +25,9 @@ export const loginUser = async (
       data
     );
 
+    console.log(response, "response");
+
     if (response.status !== 200) {
-      console.error("Login failed: status code", response.status);
-      errorToast("Login failed. Please try again.");
       return null;
     }
 

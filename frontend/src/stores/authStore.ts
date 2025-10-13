@@ -44,8 +44,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         password: get().password,
       };
       await registerUser(state);
+      return true;
     } catch (err) {
       console.error("Register error in store:", err);
+      return false;
     } finally {
       set({ isLoading: false });
     }

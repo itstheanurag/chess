@@ -26,7 +26,7 @@ export interface AuthState {
   setField: (field: "username" | "email" | "password", value: string) => void;
   resetFields: () => void;
 
-  register: (data?: RegisterData) => Promise<void>;
+  register: (data?: RegisterData) => Promise<boolean>;
   login: (data?: LoginData) => Promise<void>;
   logout: () => Promise<void>;
   searchUser: (

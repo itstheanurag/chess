@@ -20,8 +20,12 @@ const Login = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isFormValid) return;
+
     await login();
-    navigate("/dashboard");
+
+    if (authUser) {
+      navigate("/dashboard");
+    }
   };
 
   return (
