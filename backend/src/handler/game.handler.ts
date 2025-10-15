@@ -10,6 +10,7 @@ import {
   paginatedGameSearchSchema,
 } from "@/schema/game";
 import prisma from "@/libs/db";
+import { gameStorage } from "@/storage/game";
 
 export const createGame = async (req: AuthenticatedRequest, res: Response) => {
   try {
@@ -46,9 +47,7 @@ export const createGame = async (req: AuthenticatedRequest, res: Response) => {
       name: gameName?.trim() || "",
     };
 
-    const game = await prisma.game.create({
-      data: payload,
-    });
+    const game = await gameStorage.create(payload);
 
     return sendResponse(res, 201, game, "Game created successfully");
   } catch (error) {
@@ -92,14 +91,20 @@ export const joinGame = async (req: AuthenticatedRequest, res: Response) => {
       return sendError(res, 400, "Game already has two players");
     }
 
-    const updated = await prisma.game.update({
-      where: { id: gameId },
-      data: {
-        blackPlayerId: userId,
-        status: "ONGOING",
-        startedAt: new Date(),
-      },
+    const updated = await gameStorage.update(gameId, {
+      blackPlayerId: userId,
+      status: "ONGOING",
+      startedAt: new Date(),
     });
+
+    // const updated = await prisma.game.update({
+    //   where: { id: gameId },
+    //   data: {
+    //     blackPlayerId: userId,
+    //     status: "ONGOING",
+    //     startedAt: new Date(),
+    //   },
+    // });
 
     return sendResponse(res, 200, updated, "Joined game successfully");
   } catch (error) {
@@ -118,14 +123,17 @@ export const getGame = async (req: Request, res: Response) => {
     const { gameId } = req.params;
     if (!gameId) return sendError(res, 400, "Game ID is required");
 
-    const game = await prisma.game.findUnique({
-      where: { id: gameId },
-      include: { moves: { orderBy: { moveNumber: "asc" } } },
-    });
+    // const game = await prisma.game.findUnique({
+    //   where: { id: gameId },
+    //   include: { moves: { orderBy: { moveNumber: "asc" } } },
+    // });
+
+    const game = await gameStorage.findById(gameId);
 
     if (!game) return sendError(res, 404, "Game not found");
 
     const chess = new ChessGame(game.fen);
+
     return sendResponse(
       res,
       200,
@@ -152,21 +160,23 @@ export const makeMove = async (req: Request, res: Response) => {
     if (!from || !to)
       return sendError(res, 400, 'Both "from" and "to" fields are required');
 
-    const game = await prisma.game.findUnique({
-      where: { id: gameId },
-      include: { moves: { orderBy: { moveNumber: "asc" } } },
-    });
+    // const game = await prisma.game.findUnique({
+    //   where: { id: gameId },
+    //   include: { moves: { orderBy: { moveNumber: "asc" } } },
+    // });
+
+    const game = await gameStorage.findById(gameId);
 
     if (!game) return sendError(res, 404, "Game not found");
 
-    const chess = new ChessGame();
-    for (const move of game.moves) {
-      chess.makeMove({
-        from: move.fromSquare as Square,
-        to: move.toSquare as Square,
-        promotion: move.promotion || undefined,
-      });
-    }
+    const chess = new ChessGame(game.fen);
+    // for (const move of game.moves) {
+    //   chess.makeMove({
+    //     from: move.fromSquare as Square,
+    //     to: move.toSquare as Square,
+    //     promotion: move.promotion || undefined,
+    //   });
+    // }
 
     const result = chess.makeMove({
       from: from as Square,
@@ -178,22 +188,27 @@ export const makeMove = async (req: Request, res: Response) => {
       const validMoves = chess
         .getValidMoves(from as Square)
         .map((m) => ({ from: m.from, to: m.to, promotion: m.promotion }));
+
       return sendError(res, 400, result.error || "Invalid move", {
         validMoves,
       });
     }
 
-    await prisma.gameMove.create({
-      data: {
-        gameId: gameId,
-        moveNumber: game.moves.length + 1,
-        playerId: null,
-        fromSquare: from,
-        toSquare: to,
-        promotion: promotion?.toLowerCase(),
-        fen: chess.getState().fen,
-      },
-    });
+    const toCreate = {
+      gameId: gameId,
+      moveNumber: game.moves.length + 1,
+      playerId: null,
+      fromSquare: from,
+      toSquare: to,
+      promotion: promotion?.toLowerCase(),
+      fen: chess.getState().fen,
+    };
+
+    // await prisma.gameMove.create({
+    //   data: toCreate,
+    // });
+
+    await gameStorage.create(toCreate);
 
     return sendResponse(
       res,
@@ -220,22 +235,25 @@ export const getValidMoves = async (req: Request, res: Response) => {
     if (!gameId) return sendError(res, 400, "Game ID is required");
     if (!square) return sendError(res, 400, "Square parameter is required");
 
-    const game = await prisma.game.findUnique({
-      where: { id: gameId },
-      include: { moves: { orderBy: { moveNumber: "asc" } } },
-    });
+    // const game = await prisma.game.findUnique({
+    //   where: { id: gameId },
+    //   include: { moves: { orderBy: { moveNumber: "asc" } } },
+    // });
+
+    const game = await gameStorage.findById(gameId);
     if (!game) return sendError(res, 404, "Game not found");
 
-    const chess = new ChessGame();
-    for (const move of game.moves) {
-      chess.makeMove({
-        from: move.fromSquare as Square,
-        to: move.toSquare as Square,
-        promotion: move.promotion || undefined,
-      });
-    }
+    const chess = new ChessGame(game.fen);
+    // for (const move of game.moves) {
+    //   chess.makeMove({
+    //     from: move.fromSquare as Square,
+    //     to: move.toSquare as Square,
+    //     promotion: move.promotion || undefined,
+    //   });
+    // }
 
     const moves = chess.getValidMoves(square as Square);
+
     return sendResponse(
       res,
       200,
@@ -270,72 +288,76 @@ export const listGames = async (req: Request, res: Response) => {
       return sendError(res, 400, "Invalid request", result.error);
     }
 
-    const { q, page, size, status, type } = result.data;
+    // const { q, page, size, status, type } = result.data;
 
-    const pageNum = +(page ?? 1);
-    const pageSize = +(size ?? 15);
-    const skip = (pageNum - 1) * pageSize;
+    // const pageNum = +(page ?? 1);
+    // const pageSize = +(size ?? 15);
+    // const skip = (pageNum - 1) * pageSize;
 
-    const where: any = {};
+    // const where: any = {};
 
-    if (status && typeof status === "string") {
-      where.status = status.toUpperCase();
-    }
+    // if (status && typeof status === "string") {
+    //   where.status = status.toUpperCase();
+    // }
 
-    if (type && typeof type === "string") {
-      where.type = type.toUpperCase();
-    }
+    // if (type && typeof type === "string") {
+    //   where.type = type.toUpperCase();
+    // }
 
-    if (q && typeof q === "string" && q.trim().length > 0) {
-      where.OR = [
-        { name: { contains: q, mode: "insensitive" } },
-        { notes: { contains: q, mode: "insensitive" } },
-      ];
-    }
+    // if (q && typeof q === "string" && q.trim().length > 0) {
+    //   where.OR = [
+    //     { name: { contains: q, mode: "insensitive" } },
+    //     { notes: { contains: q, mode: "insensitive" } },
+    //   ];
+    // }
 
-    const totalEntries = await prisma.game.count({ where });
+    // const totalEntries = await prisma.game.count({ where });
 
-    const games = await prisma.game.findMany({
-      where,
-      select: {
-        id: true,
-        status: true,
-        type: true,
-        fen: true,
-        notes: true,
-        name: true,
-        isVisible: true,
-        createdAt: true,
-        whitePlayerId: true,
-        blackPlayerId: true,
-        whitePlayer: {
-          select: {
-            id: true,
-            username: true,
-            email: true,
-          },
-        },
-        blackPlayer: {
-          select: {
-            id: true,
-            username: true,
-            email: true,
-          },
-        },
-      },
-      orderBy: { createdAt: "desc" },
-      skip,
-      take: pageSize,
-    });
+    // const games = await prisma.game.findMany({
+    //   where,
+    //   select: {
+    //     id: true,
+    //     status: true,
+    //     type: true,
+    //     fen: true,
+    //     notes: true,
+    //     name: true,
+    //     isVisible: true,
+    //     createdAt: true,
+    //     whitePlayerId: true,
+    //     blackPlayerId: true,
+    //     whitePlayer: {
+    //       select: {
+    //         id: true,
+    //         username: true,
+    //         email: true,
+    //       },
+    //     },
+    //     blackPlayer: {
+    //       select: {
+    //         id: true,
+    //         username: true,
+    //         email: true,
+    //       },
+    //     },
+    //   },
+    //   orderBy: { createdAt: "desc" },
+    //   skip,
+    //   take: pageSize,
+    // });
+
+    const data = await gameStorage.paginatedGames(result.data);
 
     return sendResponse(
       res,
       200,
       {
-        games,
-        page: pageNum,
-        size: pageSize,
-        total: totalEntries,
+        // games,
+        // page: pageNum,
+        // size: pageSize,
+        // total: totalEntries,
+
+        ...data,
       },
       "Games fetched successfully"
     );

@@ -36,9 +36,9 @@ export interface GameState {
 }
 
 export interface Game {
-  id: bigint;
-  whitePlayerId?: bigint | null;
-  blackPlayerId?: bigint | null;
+  id: string;
+  whitePlayerId?: string | null;
+  blackPlayerId?: string | null;
   status: string;
   result?: string | null;
   type: GameType;
