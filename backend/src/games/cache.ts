@@ -1,6 +1,5 @@
 import { ChessGame } from "@/games/chess.game";
 import { redisClient } from "@/libs";
-import { Game } from "@prisma/client";
 
 const GAME_KEY_PREFIX = "active_games";
 
