@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { flushLocalTokens, getToken, saveToken } from "@/utils";
-import { errorToast } from "@/utils/toast";
+import { flushLocalTokens, getToken, saveToken } from "@/types/utils";
+import { errorToast } from "@/types/utils/toast";
 import axios, { AxiosError } from "axios";
 
 const api = axios.create({

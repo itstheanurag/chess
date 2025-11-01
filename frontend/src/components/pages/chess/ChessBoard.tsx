@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import type { Piece } from "@/types/chess";
-import { convertToSquare } from "@/utils";
+import { convertToSquare } from "@/types/utils";
 import Square from "./Square";
 import { useGameSocketStore } from "@/stores/games/socketStore";
 type ChessBoardProps = { board: (Piece | null)[][] };

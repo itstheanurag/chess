@@ -8,7 +8,9 @@ import "react-toastify/dist/ReactToastify.css";
 const App: React.FC = () => {
   return (
     <Router>
-      <AnimatedRoutes />
+      <div>
+        <AnimatedRoutes />
+      </div>
       <ToastContainer
         position="bottom-right"
         autoClose={3000}

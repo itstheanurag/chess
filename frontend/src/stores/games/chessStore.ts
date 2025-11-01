@@ -4,7 +4,7 @@ import {
   callGetGameApi,
   callJoinGameApi,
   callListGameApi,
-} from "@/utils";
+} from "@/types/utils";
 import {
   CreateGameData,
   GameStoreState,

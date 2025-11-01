@@ -110,6 +110,13 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
+.bg-radial-gradient {
+  background-image: radial-gradient(
+    at center center,
+    var(--tw-gradient-stops)
+  );
+}
+
 ::-webkit-scrollbar {
   width: 0px;
   background: transparent;
