@@ -65,19 +65,24 @@ export default function CreateGameModal({ onClose }: Props) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50 text-neutral-50">
-      <div className="bg-neutral-800 rounded-lg max-w-md w-full p-6 border border-neutral-600">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+      <div className="bg-card text-card-foreground rounded-2xl max-w-md w-full p-6 border border-border shadow-2xl">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold">Create New Game</h2>
-          <button onClick={onClose}>
-            <X size={24} />
+          <h2 className="text-2xl font-bold tracking-tight">Create New Game</h2>
+          <button
+            onClick={onClose}
+            className="p-2 hover:bg-secondary rounded-full transition-colors"
+          >
+            <X size={20} />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Game Type */}
           <div>
-            <label className="block text-sm font-medium mb-2">Game Type</label>
+            <label className="block text-sm font-medium mb-2 text-muted-foreground">
+              Game Type
+            </label>
             <select
               value={gameType}
               onChange={(e) => {
@@ -85,7 +90,7 @@ export default function CreateGameModal({ onClose }: Props) {
                 setSelectedUser(null); // reset selection when type changes
                 setPasscode("");
               }}
-              className="w-full bg-neutral-800 border border-neutral-600 rounded-lg px-4 py-2 focus:outline-none focus:border-neutral-400"
+              className="w-full bg-secondary/30 border border-border rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
               required
             >
               <option value={GameType.PUBLIC}>Public</option>
@@ -98,7 +103,7 @@ export default function CreateGameModal({ onClose }: Props) {
             <div className="space-y-4">
               {/* Invite a User */}
               <div>
-                <label className="block text-sm font-medium mb-2">
+                <label className="block text-sm font-medium mb-2 text-muted-foreground">
                   Invite a User (optional)
                 </label>
                 <input
@@ -109,11 +114,11 @@ export default function CreateGameModal({ onClose }: Props) {
                     setSelectedUser(null);
                   }}
                   placeholder="Search user..."
-                  className="w-full bg-neutral-800 border border-neutral-600 rounded-lg px-4 py-2 focus:outline-none focus:border-neutral-400"
+                  className="w-full bg-secondary/30 border border-border rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
                 />
 
                 {!selectedUser && !isSearching && searchResults.length > 0 && (
-                  <ul className="bg-neutral-700 mt-1 rounded-lg max-h-40 overflow-y-auto">
+                  <ul className="bg-popover border border-border mt-1 rounded-xl max-h-40 overflow-y-auto shadow-lg">
                     {searchResults.map((user) => (
                       <li
                         key={user.id}
@@ -122,7 +127,7 @@ export default function CreateGameModal({ onClose }: Props) {
                           setSearchQuery(user.name);
                           setSearchResults([]);
                         }}
-                        className="px-4 py-2 hover:bg-neutral-600 cursor-pointer"
+                        className="px-4 py-2 hover:bg-secondary cursor-pointer transition-colors"
                       >
                         {user.name} ({user.email})
                       </li>
@@ -130,13 +135,15 @@ export default function CreateGameModal({ onClose }: Props) {
                   </ul>
                 )}
                 {isSearching && (
-                  <p className="text-sm text-gray-400 mt-1">Searching...</p>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Searching...
+                  </p>
                 )}
               </div>
 
               {/* Passcode field - always visible for private games */}
               <div>
-                <label className="block text-sm font-medium mb-2">
+                <label className="block text-sm font-medium mb-2 text-muted-foreground">
                   Passcode (optional)
                 </label>
                 <input
@@ -144,7 +151,7 @@ export default function CreateGameModal({ onClose }: Props) {
                   value={passcode}
                   onChange={(e) => setPasscode(e.target.value)}
                   placeholder="Enter a passcode for others to join"
-                  className="w-full bg-neutral-800 border border-neutral-600 rounded-lg px-4 py-2 focus:outline-none focus:border-neutral-400"
+                  className="w-full bg-secondary/30 border border-border rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
                 />
               </div>
             </div>
@@ -152,23 +159,27 @@ export default function CreateGameModal({ onClose }: Props) {
 
           {/* Game Name */}
           <div>
-            <label className="block text-sm font-medium mb-2">Game Name</label>
+            <label className="block text-sm font-medium mb-2 text-muted-foreground">
+              Game Name
+            </label>
             <input
               type="text"
               value={gameName}
               onChange={(e) => setGameName(e.target.value)}
-              className="w-full bg-neutral-800 border border-neutral-600 rounded-lg px-4 py-2 focus:outline-none focus:border-neutral-400"
+              className="w-full bg-secondary/30 border border-border rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
               placeholder="Optional"
             />
           </div>
 
           {/* Notes */}
           <div>
-            <label className="block text-sm font-medium mb-2">Notes</label>
+            <label className="block text-sm font-medium mb-2 text-muted-foreground">
+              Notes
+            </label>
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              className="w-full bg-neutral-800 border border-neutral-600 rounded-lg px-4 py-2 focus:outline-none focus:border-neutral-400 resize-none"
+              className="w-full bg-secondary/30 border border-border rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all resize-none"
               placeholder="Optional"
               rows={3}
             />
@@ -179,13 +190,13 @@ export default function CreateGameModal({ onClose }: Props) {
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 bg-neutral-600 text-neutral-50 px-4 py-2 rounded-lg font-semibold hover:bg-neutral-500 transition-colors"
+              className="flex-1 bg-secondary text-secondary-foreground px-4 py-3 rounded-xl font-semibold hover:bg-secondary/80 transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="flex-1 bg-neutral-50 text-neutral-800 px-4 py-2 rounded-lg font-semibold hover:bg-neutral-200 transition-colors"
+              className="flex-1 bg-primary text-primary-foreground px-4 py-3 rounded-xl font-semibold hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20"
             >
               Create Game
             </button>

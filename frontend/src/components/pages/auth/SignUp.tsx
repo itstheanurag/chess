@@ -2,6 +2,8 @@ import { User, Mail, Lock, Eye, EyeOff, ArrowLeft } from "lucide-react";
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuthStore } from "@/stores";
+import { authClient } from "@/lib/auth-client";
+import { errorToast } from "@/utils/toast";
 
 const Register: React.FC = () => {
   const { username, email, password, isLoading, setField, register } =
@@ -28,6 +30,20 @@ const Register: React.FC = () => {
     } catch (err) {
       console.error("Registration error:", err);
     }
+  };
+
+  const handleSocialLogin = async (provider: "google" | "github") => {
+    await authClient.signIn.social(
+      {
+        provider,
+        callbackURL: "/dashboard", // Redirect to dashboard after login
+      },
+      {
+        onError: (ctx) => {
+          errorToast(ctx.error.message);
+        },
+      }
+    );
   };
 
   return (
@@ -173,7 +189,10 @@ const Register: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <button className="flex items-center justify-center gap-2 p-3 border border-border rounded-xl hover:bg-secondary/10 transition-colors text-foreground font-medium">
+            <button
+              onClick={() => handleSocialLogin("google")}
+              className="flex items-center justify-center gap-2 p-3 border border-border rounded-xl hover:bg-secondary/10 transition-colors text-foreground font-medium"
+            >
               <svg className="w-5 h-5" viewBox="0 0 24 24">
                 <path
                   d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -194,7 +213,10 @@ const Register: React.FC = () => {
               </svg>
               Google
             </button>
-            <button className="flex items-center justify-center gap-2 p-3 border border-border rounded-xl hover:bg-secondary/10 transition-colors text-foreground font-medium">
+            <button
+              onClick={() => handleSocialLogin("github")}
+              className="flex items-center justify-center gap-2 p-3 border border-border rounded-xl hover:bg-secondary/10 transition-colors text-foreground font-medium"
+            >
               <svg
                 className="w-5 h-5 text-foreground"
                 fill="currentColor"

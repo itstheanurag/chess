@@ -1,7 +1,16 @@
 import { GameStatsProps, Stats } from "@/types";
 import { callGetAllGameStatsApi } from "@/utils";
 import { useState, useEffect, JSX } from "react";
-import { Gamepad2, Trophy, Target, Clock } from "lucide-react";
+import {
+  Gamepad2,
+  Trophy,
+  Target,
+  Clock,
+  TrendingUp,
+  TrendingDown,
+  Minus,
+} from "lucide-react";
+import { motion } from "framer-motion";
 
 export default function GameStats() {
   const [stats, setStats] = useState<Stats | null>(null);
@@ -24,63 +33,94 @@ export default function GameStats() {
 
 function CreateCards({ stats, loading }: GameStatsProps) {
   const renderCard = (
-    value: number | JSX.Element,
+    value: number,
     label: string,
-    color?: string,
-    Icon?: JSX.Element
+    icon: JSX.Element,
+    gradient: string,
+    trend?: { value: string; isPositive: boolean }
   ) => (
-    <div className="bg-white rounded-xl p-6 shadow-sm border flex justify-between items-center">
-      <div>
-        <p className="text-sm font-medium text-gray-600">{label}</p>
-        <p className={`text-2xl font-bold ${color || "text-gray-900"}`}>
-          {value}
-        </p>
+    <motion.div
+      whileHover={{ y: -5 }}
+      className={`relative overflow-hidden rounded-3xl p-6 border border-border/50 shadow-lg group`}
+    >
+      <div
+        className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-10 group-hover:opacity-20 transition-opacity`}
+      />
+
+      <div className="relative z-10 flex justify-between items-start">
+        <div>
+          <p className="text-sm font-medium text-muted-foreground mb-1">
+            {label}
+          </p>
+          <h3 className="text-3xl font-bold tracking-tight">{value}</h3>
+
+          {trend && (
+            <div
+              className={`flex items-center gap-1 mt-2 text-xs font-medium ${
+                trend.isPositive ? "text-green-500" : "text-red-500"
+              }`}
+            >
+              {trend.isPositive ? (
+                <TrendingUp size={12} />
+              ) : (
+                <TrendingDown size={12} />
+              )}
+              <span>{trend.value}</span>
+              <span className="text-muted-foreground">vs last week</span>
+            </div>
+          )}
+        </div>
+
+        <div
+          className={`p-3 rounded-2xl bg-gradient-to-br ${gradient} text-white shadow-lg`}
+        >
+          {icon}
+        </div>
       </div>
-      {Icon}
-    </div>
+    </motion.div>
   );
 
   if (loading || !stats) {
     return (
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {[...Array(4)].map((_, idx) => (
           <div
             key={idx}
-            className="bg-white rounded-xl p-6 shadow-sm border animate-pulse"
-          >
-            <div className="h-8 bg-gray-300 rounded mb-2"></div>
-            <div className="h-3 bg-gray-300 rounded w-3/4"></div>
-          </div>
+            className="h-40 bg-card/50 rounded-3xl border border-border/50 animate-pulse"
+          />
         ))}
       </div>
     );
   }
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
       {renderCard(
         stats.total,
         "Total Games",
-        "text-blue-500",
-        <Gamepad2 className="h-8 w-8 text-blue-500" />
+        <Gamepad2 className="h-6 w-6" />,
+        "from-blue-500 to-cyan-500",
+        { value: "+12%", isPositive: true }
       )}
       {renderCard(
         stats.wins,
         "Wins",
-        "text-green-500",
-        <Trophy className="h-8 w-8 text-green-500" />
+        <Trophy className="h-6 w-6" />,
+        "from-green-500 to-emerald-500",
+        { value: "+5%", isPositive: true }
       )}
       {renderCard(
         stats.losses,
         "Losses",
-        "text-red-500",
-        <Target className="h-8 w-8 text-red-500" />
+        <Target className="h-6 w-6" />,
+        "from-red-500 to-pink-500",
+        { value: "-2%", isPositive: true }
       )}
       {renderCard(
         stats.draws,
         "Draws",
-        "text-yellow-500",
-        <Clock className="h-8 w-8 text-yellow-500" />
+        <Minus className="h-6 w-6" />,
+        "from-yellow-500 to-orange-500"
       )}
     </div>
   );

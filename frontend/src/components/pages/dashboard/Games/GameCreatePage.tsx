@@ -3,14 +3,14 @@ import PaginatedGamesCards from "./PaginatedCards";
 
 const GameCreatePage = () => {
   return (
-    <div className="min-h-screen p-4 sm:p-6">
+    <div className="p-0">
       <div className="max-w-6xl mx-auto">
-        <div className="mb-6 sm:mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-2xl sm:text-4xl font-bold mb-1 sm:mb-2">
+            <h1 className="text-3xl sm:text-4xl font-bold mb-2 tracking-tight">
               Chess Games
             </h1>
-            <p className="text-sm sm:text-base text-neutral-400">
+            <p className="text-muted-foreground">
               Track and manage your chess matches
             </p>
           </div>
