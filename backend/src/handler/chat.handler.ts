@@ -1,4 +1,5 @@
-import prisma from "@/libs/db";
+import { db } from "@/db/drizzle";
+import { gameMessage } from "@/db/schema";
 
 export const handleBulkChatMessages = async (
   messages: {
@@ -16,7 +17,7 @@ export const handleBulkChatMessages = async (
       sentAt: m.sentAt || new Date(),
     }));
 
-    await prisma.gameMessage.createMany({ data: payloads });
+    await db.insert(gameMessage).values(payloads);
     console.log(`${messages.length} chat messages saved.`);
   } catch (err) {
     console.error("Failed to save chat messages:", err);

@@ -1,4 +1,3 @@
-import prisma from "@/libs/db";
 import { paginatedSearchSchema } from "@/schema";
 import { authStorage } from "@/storage/auth";
 import { AuthenticatedRequest } from "@/types";

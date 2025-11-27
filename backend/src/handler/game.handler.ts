@@ -9,8 +9,10 @@ import {
   GameType,
   paginatedGameSearchSchema,
 } from "@/schema/game";
-import prisma from "@/libs/db";
 import { gameStorage } from "@/storage/game";
+import { db } from "@/db/drizzle";
+import { game } from "@/db/schema";
+import { eq, or, and, count } from "drizzle-orm";
 
 export const createGame = async (req: AuthenticatedRequest, res: Response) => {
   try {
@@ -47,9 +49,9 @@ export const createGame = async (req: AuthenticatedRequest, res: Response) => {
       name: gameName?.trim() || "",
     };
 
-    const game = await gameStorage.create(payload);
+    const newGame = await gameStorage.create(payload);
 
-    return sendResponse(res, 201, game, "Game created successfully");
+    return sendResponse(res, 201, newGame, "Game created successfully");
   } catch (error) {
     console.error("Error creating game:", error);
     return sendError(
@@ -67,27 +69,28 @@ export const joinGame = async (req: AuthenticatedRequest, res: Response) => {
     const { gameId } = req.params;
     const userId = req.user!.id;
 
-    const game = await prisma.game.findUnique({
-      where: { id: gameId },
-    });
+    const existingGame = await gameStorage.findById(gameId);
 
-    if (!game) return sendError(res, 404, "Game not found");
+    if (!existingGame) return sendError(res, 404, "Game not found");
 
-    if (game.whitePlayerId === userId || game.blackPlayerId === userId) {
+    if (
+      existingGame.whitePlayerId === userId ||
+      existingGame.blackPlayerId === userId
+    ) {
       return sendError(res, 400, "You are already part of this game");
     }
 
-    if (game.type === GameType.PRIVATE) {
+    if (existingGame.type === GameType.PRIVATE) {
       if (!passcode) {
         return sendError(res, 400, "Passcode is required to join this game");
       }
 
-      if (game.passcode !== passcode) {
+      if (existingGame.passcode !== passcode) {
         return sendError(res, 403, "Invalid passcode");
       }
     }
 
-    if (game.blackPlayerId) {
+    if (existingGame.blackPlayerId) {
       return sendError(res, 400, "Game already has two players");
     }
 
@@ -96,15 +99,6 @@ export const joinGame = async (req: AuthenticatedRequest, res: Response) => {
       status: "ONGOING",
       startedAt: new Date(),
     });
-
-    // const updated = await prisma.game.update({
-    //   where: { id: gameId },
-    //   data: {
-    //     blackPlayerId: userId,
-    //     status: "ONGOING",
-    //     startedAt: new Date(),
-    //   },
-    // });
 
     return sendResponse(res, 200, updated, "Joined game successfully");
   } catch (error) {
@@ -123,21 +117,16 @@ export const getGame = async (req: Request, res: Response) => {
     const { gameId } = req.params;
     if (!gameId) return sendError(res, 400, "Game ID is required");
 
-    // const game = await prisma.game.findUnique({
-    //   where: { id: gameId },
-    //   include: { moves: { orderBy: { moveNumber: "asc" } } },
-    // });
+    const existingGame = await gameStorage.findById(gameId);
 
-    const game = await gameStorage.findById(gameId);
+    if (!existingGame) return sendError(res, 404, "Game not found");
 
-    if (!game) return sendError(res, 404, "Game not found");
-
-    const chess = new ChessGame(game.fen);
+    const chess = new ChessGame(existingGame.fen);
 
     return sendResponse(
       res,
       200,
-      { gameId, ...chess.getState(), dbGame: game },
+      { gameId, ...chess.getState(), dbGame: existingGame },
       "Game fetched successfully"
     );
   } catch (error) {
@@ -160,23 +149,11 @@ export const makeMove = async (req: Request, res: Response) => {
     if (!from || !to)
       return sendError(res, 400, 'Both "from" and "to" fields are required');
 
-    // const game = await prisma.game.findUnique({
-    //   where: { id: gameId },
-    //   include: { moves: { orderBy: { moveNumber: "asc" } } },
-    // });
+    const existingGame = await gameStorage.findById(gameId);
 
-    const game = await gameStorage.findById(gameId);
+    if (!existingGame) return sendError(res, 404, "Game not found");
 
-    if (!game) return sendError(res, 404, "Game not found");
-
-    const chess = new ChessGame(game.fen);
-    // for (const move of game.moves) {
-    //   chess.makeMove({
-    //     from: move.fromSquare as Square,
-    //     to: move.toSquare as Square,
-    //     promotion: move.promotion || undefined,
-    //   });
-    // }
+    const chess = new ChessGame(existingGame.fen);
 
     const result = chess.makeMove({
       from: from as Square,
@@ -196,7 +173,7 @@ export const makeMove = async (req: Request, res: Response) => {
 
     const toCreate = {
       gameId: gameId,
-      moveNumber: game.moves.length + 1,
+      moveNumber: existingGame.moves.length + 1,
       playerId: null,
       fromSquare: from,
       toSquare: to,
@@ -204,11 +181,10 @@ export const makeMove = async (req: Request, res: Response) => {
       fen: chess.getState().fen,
     };
 
-    // await prisma.gameMove.create({
-    //   data: toCreate,
-    // });
+    await gameStorage.createMove(toCreate);
 
-    await gameStorage.create(toCreate);
+    // Update game FEN
+    await gameStorage.update(gameId, { fen: chess.getState().fen });
 
     return sendResponse(
       res,
@@ -235,22 +211,10 @@ export const getValidMoves = async (req: Request, res: Response) => {
     if (!gameId) return sendError(res, 400, "Game ID is required");
     if (!square) return sendError(res, 400, "Square parameter is required");
 
-    // const game = await prisma.game.findUnique({
-    //   where: { id: gameId },
-    //   include: { moves: { orderBy: { moveNumber: "asc" } } },
-    // });
+    const existingGame = await gameStorage.findById(gameId);
+    if (!existingGame) return sendError(res, 404, "Game not found");
 
-    const game = await gameStorage.findById(gameId);
-    if (!game) return sendError(res, 404, "Game not found");
-
-    const chess = new ChessGame(game.fen);
-    // for (const move of game.moves) {
-    //   chess.makeMove({
-    //     from: move.fromSquare as Square,
-    //     to: move.toSquare as Square,
-    //     promotion: move.promotion || undefined,
-    //   });
-    // }
+    const chess = new ChessGame(existingGame.fen);
 
     const moves = chess.getValidMoves(square as Square);
 
@@ -288,75 +252,12 @@ export const listGames = async (req: Request, res: Response) => {
       return sendError(res, 400, "Invalid request", result.error);
     }
 
-    // const { q, page, size, status, type } = result.data;
-
-    // const pageNum = +(page ?? 1);
-    // const pageSize = +(size ?? 15);
-    // const skip = (pageNum - 1) * pageSize;
-
-    // const where: any = {};
-
-    // if (status && typeof status === "string") {
-    //   where.status = status.toUpperCase();
-    // }
-
-    // if (type && typeof type === "string") {
-    //   where.type = type.toUpperCase();
-    // }
-
-    // if (q && typeof q === "string" && q.trim().length > 0) {
-    //   where.OR = [
-    //     { name: { contains: q, mode: "insensitive" } },
-    //     { notes: { contains: q, mode: "insensitive" } },
-    //   ];
-    // }
-
-    // const totalEntries = await prisma.game.count({ where });
-
-    // const games = await prisma.game.findMany({
-    //   where,
-    //   select: {
-    //     id: true,
-    //     status: true,
-    //     type: true,
-    //     fen: true,
-    //     notes: true,
-    //     name: true,
-    //     isVisible: true,
-    //     createdAt: true,
-    //     whitePlayerId: true,
-    //     blackPlayerId: true,
-    //     whitePlayer: {
-    //       select: {
-    //         id: true,
-    //         username: true,
-    //         email: true,
-    //       },
-    //     },
-    //     blackPlayer: {
-    //       select: {
-    //         id: true,
-    //         username: true,
-    //         email: true,
-    //       },
-    //     },
-    //   },
-    //   orderBy: { createdAt: "desc" },
-    //   skip,
-    //   take: pageSize,
-    // });
-
     const data = await gameStorage.paginatedGames(result.data);
 
     return sendResponse(
       res,
       200,
       {
-        // games,
-        // page: pageNum,
-        // size: pageSize,
-        // total: totalEntries,
-
         ...data,
       },
       "Games fetched successfully"
@@ -379,38 +280,47 @@ export const GetAllGameStats = async (
   try {
     const userId = req.user!.id;
 
-    const total = await prisma.game.count({
-      where: {
-        OR: [{ whitePlayerId: userId }, { blackPlayerId: userId }],
-      },
-    });
+    const [totalResult] = await db
+      .select({ count: count() })
+      .from(game)
+      .where(
+        or(eq(game.whitePlayerId, userId), eq(game.blackPlayerId, userId))
+      );
 
-    const wins = await prisma.game.count({
-      where: {
-        OR: [
-          { whitePlayerId: userId, result: "white_win" },
-          { blackPlayerId: userId, result: "black_win" },
-        ],
-      },
-    });
+    const total = totalResult?.count ?? 0;
 
-    const losses = await prisma.game.count({
-      where: {
-        OR: [
-          { whitePlayerId: userId, result: "black_win" },
-          { blackPlayerId: userId, result: "white_win" },
-        ],
-      },
-    });
+    const [winsResult] = await db
+      .select({ count: count() })
+      .from(game)
+      .where(
+        or(
+          and(eq(game.whitePlayerId, userId), eq(game.result, "white_win")),
+          and(eq(game.blackPlayerId, userId), eq(game.result, "black_win"))
+        )
+      );
+    const wins = winsResult?.count ?? 0;
 
-    const draws = await prisma.game.count({
-      where: {
-        OR: [
-          { whitePlayerId: userId, result: "draw" },
-          { blackPlayerId: userId, result: "draw" },
-        ],
-      },
-    });
+    const [lossesResult] = await db
+      .select({ count: count() })
+      .from(game)
+      .where(
+        or(
+          and(eq(game.whitePlayerId, userId), eq(game.result, "black_win")),
+          and(eq(game.blackPlayerId, userId), eq(game.result, "white_win"))
+        )
+      );
+    const losses = lossesResult?.count ?? 0;
+
+    const [drawsResult] = await db
+      .select({ count: count() })
+      .from(game)
+      .where(
+        or(
+          and(eq(game.whitePlayerId, userId), eq(game.result, "draw")),
+          and(eq(game.blackPlayerId, userId), eq(game.result, "draw"))
+        )
+      );
+    const draws = drawsResult?.count ?? 0;
 
     const stats: Stats = { total, wins, losses, draws };
     return sendResponse(res, 200, { stats }, "Stats fetched successfully");
