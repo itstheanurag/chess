@@ -1,42 +1,38 @@
-import prisma from "@/libs/db";
+import { db } from "@/db/drizzle";
+import { game, gameMove, user } from "@/db/schema";
+import { eq, and, or, ilike, desc, count, sql } from "drizzle-orm";
 
 export const gameStorage = {
-  create: async (data: any) => await prisma.game.create({ data }),
+  create: async (data: any) => {
+    const [newGame] = await db.insert(game).values(data).returning();
+    return newGame;
+  },
 
-  findById: async (id: string) =>
-    await prisma.game.findUnique({
-      where: { id },
-      include: { moves: { orderBy: { moveNumber: "asc" } } },
-    }),
-
-  update: async (id: string, data: any) =>
-    await prisma.game.update({ where: { id }, data }),
-
-  count: async (where: any) => await prisma.game.count({ where }),
-
-  findMany: async (where: any, skip: number, take: number) =>
-    await prisma.game.findMany({
-      where,
-      select: {
-        id: true,
-        status: true,
-        type: true,
-        fen: true,
-        notes: true,
-        name: true,
-        isVisible: true,
-        createdAt: true,
-        whitePlayerId: true,
-        blackPlayerId: true,
-        whitePlayer: { select: { id: true, username: true, email: true } },
-        blackPlayer: { select: { id: true, username: true, email: true } },
+  findById: async (id: string) => {
+    const result = await db.query.game.findFirst({
+      where: eq(game.id, id),
+      with: {
+        moves: {
+          orderBy: (moves, { asc }) => [asc(moves.moveNumber)],
+        },
       },
-      orderBy: { createdAt: "desc" },
-      skip,
-      take,
-    }),
+    });
+    return result;
+  },
 
-  createMove: async (data: any) => await prisma.gameMove.create({ data }),
+  update: async (id: string, data: any) => {
+    const [updatedGame] = await db
+      .update(game)
+      .set(data)
+      .where(eq(game.id, id))
+      .returning();
+    return updatedGame;
+  },
+
+  createMove: async (data: any) => {
+    const [newMove] = await db.insert(gameMove).values(data).returning();
+    return newMove;
+  },
 
   async paginatedGames(query: {
     q?: string;
@@ -49,57 +45,55 @@ export const gameStorage = {
 
     const pageNum = +(page ?? 1);
     const pageSize = +(size ?? 15);
-    const skip = (pageNum - 1) * pageSize;
+    const offset = (pageNum - 1) * pageSize;
 
-    const where: any = {};
+    const conditions = [];
 
     if (status && typeof status === "string") {
-      where.status = status.toUpperCase();
+      conditions.push(eq(game.status, status)); // Case sensitive or normalize if needed
     }
 
     if (type && typeof type === "string") {
-      where.type = type.toUpperCase();
+      // @ts-ignore - enum handling might need casting or exact match
+      conditions.push(eq(game.type, type.toUpperCase()));
     }
 
     if (q && typeof q === "string" && q.trim().length > 0) {
-      where.OR = [
-        { name: { contains: q, mode: "insensitive" } },
-        { notes: { contains: q, mode: "insensitive" } },
-      ];
+      conditions.push(
+        or(ilike(game.name, `%${q}%`), ilike(game.notes, `%${q}%`))
+      );
     }
 
-    const totalEntries = await prisma.game.count({ where });
-    const games = await prisma.game.findMany({
-      where,
-      select: {
-        id: true,
-        status: true,
-        type: true,
-        fen: true,
-        notes: true,
-        name: true,
-        isVisible: true,
-        createdAt: true,
-        whitePlayerId: true,
-        blackPlayerId: true,
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+
+    const [totalResult] = await db
+      .select({ count: count() })
+      .from(game)
+      .where(whereClause);
+
+    const totalEntries = totalResult?.count ?? 0;
+
+    const games = await db.query.game.findMany({
+      where: whereClause,
+      with: {
         whitePlayer: {
-          select: {
+          columns: {
             id: true,
             username: true,
             email: true,
           },
         },
         blackPlayer: {
-          select: {
+          columns: {
             id: true,
             username: true,
             email: true,
           },
         },
       },
-      orderBy: { createdAt: "desc" },
-      skip,
-      take: pageSize,
+      orderBy: [desc(game.createdAt)],
+      limit: pageSize,
+      offset: offset,
     });
 
     return {

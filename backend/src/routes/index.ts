@@ -1,11 +1,8 @@
 import { Router, Request, Response } from "express";
-import AuthRoutes from "./auth.route";
 import GameRoutes from "./game.route";
 import UserRoutes from "./user.route";
 
 const router: Router = Router();
-
-router.use("/api/auth", AuthRoutes);
 router.use("/api/games", GameRoutes);
 router.use("/api/users", UserRoutes);
 

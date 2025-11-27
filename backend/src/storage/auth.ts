@@ -1,12 +1,17 @@
-import prisma from "@/libs/db";
+import { db } from "@/db/drizzle";
+import { user, account } from "@/db/schema";
+import { eq, or, and, ilike, count, not } from "drizzle-orm";
 import { hashPassword } from "@/utils";
-import { Prisma, User } from "@prisma/client";
+import { v4 as uuidv4 } from "uuid";
 
 export const authStorage = {
-  async findUserByEmail(email: string): Promise<User | null> {
-    return prisma.user.findUnique({
-      where: { email },
-    });
+  async findUserByEmail(email: string) {
+    const result = await db
+      .select()
+      .from(user)
+      .where(eq(user.email, email))
+      .limit(1);
+    return result[0] || null;
   },
 
   async createUser({
@@ -17,14 +22,36 @@ export const authStorage = {
     username: string;
     email: string;
     password: string;
-  }): Promise<User> {
-    return prisma.user.create({
-      data: {
-        username,
-        email,
-        passwordHash: hashPassword(password),
-      },
+  }) {
+    const userId = uuidv4();
+    const now = new Date();
+
+    // Create User
+    const [newUser] = await db
+      .insert(user)
+      .values({
+        id: userId,
+        name: username,
+        email: email,
+        emailVerified: false,
+        createdAt: now,
+        updatedAt: now,
+        username: username,
+      })
+      .returning();
+
+    // Create Account for password
+    await db.insert(account).values({
+      id: uuidv4(),
+      accountId: userId,
+      providerId: "credential", // or "email-password" depending on Better Auth internals
+      userId: userId,
+      password: hashPassword(password),
+      createdAt: now,
+      updatedAt: now,
     });
+
+    return newUser;
   },
 
   async searchUsers({
@@ -40,38 +67,36 @@ export const authStorage = {
   }) {
     const pageNum = +page || 1;
     const pageSize = +size || 15;
-    const skip = (pageNum - 1) * pageSize;
+    const offset = (pageNum - 1) * pageSize;
     const query = q.trim();
 
-    const where: Prisma.UserWhereInput = {
-      AND: [
-        {
-          OR: [
-            {
-              username: { contains: query, mode: Prisma.QueryMode.insensitive },
-            },
-            { email: { contains: query, mode: Prisma.QueryMode.insensitive } },
-          ],
-        },
-        { NOT: { id: userId } },
-      ],
-    };
+    const conditions = [
+      not(eq(user.id, userId)),
+      or(ilike(user.username, `%${query}%`), ilike(user.email, `%${query}%`)),
+    ];
 
-    const totalEntries = await prisma.user.count({ where });
+    const whereClause = and(...conditions);
 
-    const users = await prisma.user.findMany({
-      where,
-      select: {
-        id: true,
-        username: true,
-        email: true,
-      },
-      skip,
-      take: pageSize,
-    });
+    const [totalResult] = await db
+      .select({ count: count() })
+      .from(user)
+      .where(whereClause);
+
+    const totalEntries = totalResult?.count ?? 0;
+
+    const users = await db
+      .select({
+        id: user.id,
+        username: user.username,
+        email: user.email,
+      })
+      .from(user)
+      .where(whereClause)
+      .limit(pageSize)
+      .offset(offset);
 
     const formatted = users.map((u) => ({
-      id: u.id.toString(),
+      id: u.id,
       name: u.username,
       email: u.email,
     }));
