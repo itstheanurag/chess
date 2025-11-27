@@ -1,171 +1,177 @@
-# Chess Game
+# Chess Game 🎮♟️
 
-A real-time multiplayer chess game built with Node.js, Express, Socket.IO, React, and chess.js.
+A modern, real-time multiplayer chess game built with **Node.js**, **Express**, **Socket.IO**, **React**, and **chess.js**.
 
----
-
-## Features
-
-- Real-time multiplayer gameplay
-- Move validation using chess.js
-- Support for special moves (castling, en passant, promotion)
-- Game over detection (checkmate, stalemate, draw)
-- Responsive design
-- User authentication (JWT)
-- Leaderboards, puzzles, and chat
+![Chess Game](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)
+![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
+![Node.js](https://img.shields.io/badge/Node.js-43853D?style=for-the-badge&logo=node.js&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white)
+![Redis](https://img.shields.io/badge/Redis-DC382D?style=for-the-badge&logo=redis&logoColor=white)
 
 ---
 
-## Requirements
+## ✨ Features
 
-- **Node.js** (v14 or higher)
-- **pnpm** (recommended) or npm
-- **Redis** (for backend caching/sessions)
-- **Prisma** (ORM for backend, uses SQLite/Postgres/MySQL)
-- **Vite** (for frontend development)
+- ♟️ **Real-time multiplayer chess** with Socket.IO
+- 🎯 **Complete chess rules** including castling, en passant, and promotion
+- 👤 **User authentication** with Better Auth
+- 📊 **Leaderboards** and player statistics
+- 🧩 **Daily chess puzzles**
+- 💬 **Real-time chat** functionality
+- 🎨 **Modern UI** with Tailwind CSS v4 and Framer Motion
+- 📱 **Responsive design** for all devices
+
+[**View all features →**](./docs/FEATURES.md)
 
 ---
 
-## Project Structure
+## 🚀 Quick Start
 
-```
-chess/
-├── backend/                  # Backend server code (Node.js, Express, Socket.IO)
-│   ├── src/
-│   │   ├── config/           # Configuration files
-│   │   ├── handler/          # Route handlers (controllers)
-│   │   ├── libs/             # Libraries (db, redis, socket, server)
-│   │   ├── middlewares/      # Express and socket middlewares
-│   │   ├── routes/           # Express routes
-│   │   ├── schema/           # Zod validation schemas
-│   │   ├── types/            # TypeScript types
-│   │   ├── utils/            # Utility functions
-│   │   └── main.ts           # Backend entry point
-│   ├── prisma/               # Prisma schema and migrations
-│   ├── package.json
-│   ├── tsconfig.json
-│   └── .env.example
-├── frontend/                 # Frontend React application (Vite + React + TS)
-│   ├── src/
-│   │   ├── components/       # React components (pages, UI, Home, etc.)
-│   │   ├── stores/           # Zustand stores (state management)
-│   │   ├── types/            # TypeScript types
-│   │   ├── utils/            # Utility functions and API calls
-│   │   ├── lib/              # Axios and socket.io client setup
-│   │   └── App.tsx           # Main React component
-│   ├── index.html
-│   ├── index.css
-│   ├── package.json
-│   ├── tsconfig.json
-│   └── .env.example
-└── README.md                 # Project documentation
+### Prerequisites
+
+- Node.js (v14+)
+- PostgreSQL
+- Redis
+- pnpm (recommended) or npm
+
+### Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/chess.git
+cd chess
+
+# Backend setup
+cd backend
+pnpm install
+cp .env.example .env
+# Edit .env with your configuration
+pnpm db:push
+pnpm dev
+
+# Frontend setup (in a new terminal)
+cd frontend
+pnpm install
+cp .env.example .env
+# Edit .env with your configuration
+pnpm dev
 ```
 
+**[📖 Detailed Setup Guide →](./docs/SETUP.md)**
+
 ---
 
-## Tech Stack
+## 📚 Documentation
+
+- **[Features](./docs/FEATURES.md)** - Complete list of features
+- **[Tech Stack](./docs/TECH_STACK.md)** - Technologies used
+- **[Project Structure](./docs/PROJECT_STRUCTURE.md)** - Codebase organization
+- **[Setup Guide](./docs/SETUP.md)** - Installation and configuration
+- **[API Documentation](./docs/API.md)** - REST and WebSocket API reference
+- **[Scripts](./docs/SCRIPTS.md)** - Available npm/pnpm scripts
+
+---
+
+## 🛠️ Tech Stack
 
 ### Backend
 
-- **Node.js** & **Express** — REST API server
-- **Socket.IO** — Real-time communication
-- **Prisma** — ORM for database access
-- **Redis** — Caching/session management
-- **chess.js** — Chess rules and move validation
-- **Zod** — Schema validation
-- **JWT** — Authentication
+- Node.js & Express
+- Socket.IO for real-time communication
+- Drizzle ORM with PostgreSQL
+- Redis for caching
+- Better Auth for authentication
 
 ### Frontend
 
-- **React** (with TypeScript)
-- **Vite** — Fast development server and build tool
-- **Zustand** — State management
-- **Socket.IO Client** — Real-time updates
-- **Axios** — HTTP requests
-- **Tailwind CSS** — Styling
-- **React Toastify** — Notifications
+- React 19 with TypeScript
+- Vite for fast development
+- Zustand for state management
+- Tailwind CSS v4
+- Framer Motion for animations
+
+**[View complete tech stack →](./docs/TECH_STACK.md)**
 
 ---
 
-## Getting Started
+## 📁 Project Structure
 
-### Backend Setup
+```
+chess/
+├── backend/          # Node.js + Express + Socket.IO
+├── frontend/         # React + Vite + TypeScript
+├── docs/             # Documentation
+└── README.md         # This file
+```
 
-1. Navigate to the backend directory:
-   ```bash
-   cd backend
-   ```
-
-2. Install dependencies:
-   ```bash
-   pnpm install
-   # or
-   npm install
-   ```
-
-3. Set up your environment variables:
-   - Copy `.env.example` to `.env` and fill in the required values.
-
-4. Run database migrations (if using Prisma):
-   ```bash
-   pnpm prisma migrate dev
-   # or
-   npx prisma migrate dev
-   ```
-
-5. Start the backend server:
-   ```bash
-   pnpm dev
-   # or
-   npm run dev
-   ```
-   The backend will run on `http://localhost:3000` by default.
+**[View detailed structure →](./docs/PROJECT_STRUCTURE.md)**
 
 ---
 
-### Frontend Setup
+## 🎮 Usage
 
-1. In a new terminal, navigate to the frontend directory:
-   ```bash
-   cd frontend
-   ```
-
-2. Install dependencies:
-   ```bash
-   pnpm install
-   # or
-   npm install
-   ```
-
-3. Set up your environment variables:
-   - Copy `.env.example` to `.env` and fill in the required values (API URL, etc).
-
-4. Start the frontend development server:
-   ```bash
-   pnpm dev
-   # or
-   npm run dev
-   ```
-   The frontend will open automatically in your default browser at `http://localhost:5173` (or as configured).
+1. **Start the backend server** (runs on `http://localhost:3000`)
+2. **Start the frontend** (runs on `http://localhost:5173`)
+3. **Create an account** or log in
+4. **Create a game** or join an existing one
+5. **Play chess** in real-time!
 
 ---
 
-## Scripts
+## 🧪 Available Scripts
 
-### Backend (`backend/package.json`)
+### Backend
 
-- `pnpm dev` — Start the backend in development mode (with nodemon)
-- `pnpm build` — Build the backend TypeScript code
-- `pnpm start` — Start the backend in production mode
+```bash
+pnpm dev          # Start development server
+pnpm build        # Build for production
+pnpm db:generate  # Generate database migrations
+pnpm db:push      # Push schema to database
+```
 
-### Frontend (`frontend/package.json`)
+### Frontend
 
-- `pnpm dev` — Start the frontend development server
-- `pnpm build` — Build the frontend for production
-- `pnpm preview` — Preview the production build
+```bash
+pnpm dev      # Start development server
+pnpm build    # Build for production
+pnpm preview  # Preview production build
+```
+
+**[View all scripts →](./docs/SCRIPTS.md)**
 
 ---
 
-## License
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+---
+
+## 📝 License
 
 This project is open source and available under the [MIT License](LICENSE).
+
+---
+
+## 🙏 Acknowledgments
+
+- [chess.js](https://github.com/jhlywa/chess.js) - Chess logic library
+- [Socket.IO](https://socket.io/) - Real-time communication
+- [Drizzle ORM](https://orm.drizzle.team/) - TypeScript ORM
+- [Better Auth](https://www.better-auth.com/) - Authentication library
+
+---
+
+## 📧 Contact
+
+For questions or support, please open an issue on GitHub.
+
+---
+
+**Happy Chess Playing! ♟️**
