@@ -7,7 +7,8 @@ import router from "@/routes";
 import { requestLogger, notFoundHandler, errorHandler } from "@/middlewares";
 import { logRoutes } from "@/middlewares/app";
 import { redisClient } from "../redis";
-import prisma from "../db";
+import { toNodeHandler } from "better-auth/node";
+import { auth } from "@/auth";
 
 const app = express();
 const server = http.createServer(app);
@@ -25,6 +26,10 @@ app.use(express.urlencoded({ extended: true }));
 app.use(corsMiddleware);
 
 app.use(requestLogger);
+
+// Mount Better Auth routes
+app.all("/api/auth/*", toNodeHandler(auth));
+
 app.use(router);
 app.use(notFoundHandler);
 app.use(errorHandler);
@@ -38,8 +43,8 @@ export const startServer = async () => {
   }
 
   try {
-    await prisma.$connect();
-    console.log("Prisma connected");
+    // Drizzle connects via pool automatically
+    console.log("Database initialized");
 
     await redisClient.connect();
 
@@ -63,9 +68,6 @@ export const shutdown = async (signal: string) => {
   console.log(`\n${signal} received. Shutting down gracefully...`);
 
   try {
-    await prisma.$disconnect();
-    console.log("Prisma disconnected");
-
     if (redisClient.isOpen) await redisClient.disconnect();
     console.log("Redis disconnected");
   } catch (err) {

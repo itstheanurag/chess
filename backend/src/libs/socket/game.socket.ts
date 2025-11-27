@@ -1,9 +1,7 @@
 import { Namespace, Socket } from "socket.io";
-import { JoinGameData, JwtPayloadOptions, MoveData } from "@/types";
+import { JoinGameData, User, MoveData } from "@/types";
 import { Square } from "chess.js";
-import { randomUUID } from "crypto";
 import { loadGame, cacheGame } from "@/games";
-import prisma from "../db";
 
 export const initializeGameNamespace = (nsp: Namespace) => {
   console.log(`✅ Game namespace initialized: ${nsp.name}`);
@@ -19,7 +17,7 @@ export const initializeGameNamespace = (nsp: Namespace) => {
       const { room: gameId, playerName, isSpectator = false } = data;
       console.log(`[joinGame] Player: ${playerName}, Room: ${gameId}`);
 
-      const game = await loadGame(gameId, prisma);
+      const game = await loadGame(gameId);
       if (!game) {
         socket.emit("error", { success: false, message: "Game not found" });
         return;
@@ -47,10 +45,10 @@ export const initializeGameNamespace = (nsp: Namespace) => {
 
     socket.on("makeMove", async (data: MoveData) => {
       const { room: gameId, move } = data;
-      const user = socket.user as JwtPayloadOptions;
-      const userId = user.sub;
+      const user = socket.user as User;
+      const userId = user.id;
 
-      const game = await loadGame(gameId, prisma);
+      const game = await loadGame(gameId);
       if (!game) {
         socket.emit("error", { success: false, message: "Game not found" });
         return;
@@ -108,7 +106,7 @@ export const initializeGameNamespace = (nsp: Namespace) => {
      * --- RESET GAME ---
      */
     socket.on("resetGame", async (gameId: string) => {
-      const game = await loadGame(gameId, prisma);
+      const game = await loadGame(gameId);
       if (!game) return;
 
       game.resetGame();
@@ -118,11 +116,11 @@ export const initializeGameNamespace = (nsp: Namespace) => {
     });
 
     socket.on("leaveGame", async (gameId: string) => {
-      const game = await loadGame(gameId, prisma);
+      const game = await loadGame(gameId);
       if (!game) return;
       socket.leave(gameId);
-      const user = socket.user as JwtPayloadOptions;
-      const userId = user.sub;
+      const user = socket.user as User;
+      const userId = user.id;
 
       // game.removePlayerOrSpectator(userId);
       await cacheGame(gameId, game);

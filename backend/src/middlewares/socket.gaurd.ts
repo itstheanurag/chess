@@ -1,13 +1,11 @@
 import { Socket } from "socket.io";
-import jwt from "jsonwebtoken";
-import type { JwtPayload } from "jsonwebtoken";
-import { config, JWT_CONFIG } from "@/config";
-import { JwtPayloadOptions } from "@/types";
+import { auth } from "@/auth";
+import { User } from "@/types";
 
 // Extend the Socket interface to include the user property
 declare module "socket.io" {
   interface Socket {
-    user?: JwtPayload | string;
+    user?: User;
   }
 }
 
@@ -18,40 +16,36 @@ declare module "socket.io" {
  */
 
 export const socketAuthGuard = (isAuthRequired: boolean = true) => {
-  return (socket: Socket, next: (err?: Error) => void) => {
+  return async (socket: Socket, next: (err?: Error) => void) => {
     try {
+      // Better Auth usually uses cookies, which are passed in the handshake headers
+      const headers = new Headers();
+      if (socket.handshake.headers.cookie) {
+        headers.append("cookie", socket.handshake.headers.cookie);
+      }
+
+      // If using bearer token for mobile/other clients, handle that too
       const authHeader = socket.handshake.headers?.authorization;
-      const token = authHeader?.split(" ")[1] || socket.handshake?.auth?.token;
-
-      if (!token && isAuthRequired) {
-        console.warn(
-          "Socket connection rejected: No authentication token provided"
-        );
-        return next(new Error("Authentication error: No token provided"));
+      if (authHeader) {
+        headers.append("authorization", authHeader);
       }
 
-      if (!token) {
-        return next();
+      const session = await auth.api.getSession({
+        headers: headers,
+      });
+
+      if (!session && isAuthRequired) {
+        console.warn("Socket connection rejected: No valid session found");
+        return next(new Error("Authentication error: Unauthorized"));
       }
 
-      try {
-        const decoded = jwt.verify(
-          token,
-          JWT_CONFIG.accessTokenSecret
-        ) as JwtPayloadOptions;
-
-        socket.user = decoded;
-        next();
-      } catch (error) {
-        // console.error("Socket authentication error:", error);
-
-        if (isAuthRequired) {
-          return next(new Error("Authentication error: Invalid token"));
-        }
-        next();
+      if (session) {
+        socket.user = session.user as User;
       }
+
+      next();
     } catch (error) {
-      // console.error("Error in socket authentication middleware:", error);
+      console.error("Error in socket authentication middleware:", error);
       return next(new Error("Internal server error during authentication"));
     }
   };
