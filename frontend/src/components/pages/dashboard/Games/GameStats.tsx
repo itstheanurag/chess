@@ -1,5 +1,5 @@
 import { GameStatsProps, Stats } from "@/types";
-import { callGetAllGameStatsApi } from "@/types/utils";
+import { callGetAllGameStatsApi } from "@/utils";
 import { useState, useEffect, JSX } from "react";
 import { Gamepad2, Trophy, Target, Clock } from "lucide-react";
 

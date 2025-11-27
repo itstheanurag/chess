@@ -14,7 +14,7 @@ import {
   loginUser,
   registerUser,
   callSearchUserApi,
-} from "@/types/utils";
+} from "@/utils";
 
 export const useAuthStore = create<AuthState>((set, get) => ({
   authUser:
