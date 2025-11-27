@@ -40,17 +40,6 @@ export const config = {
     isDevelopment: process.env.NODE_ENV !== "production",
   },
 
-  jwt: {
-    accessTokenSecret: process.env.JWT_ACCESS_SECRET || "your-secret-key",
-    refreshTokenSecret:
-      process.env.REFRESH_TOKEN_SECRET || "your-refresh-secret-key",
-    accessTokenExpiresIn: process.env.JWT_ACCESS_EXPIRES_IN || "1h",
-    refreshTokenExpiresIn: process.env.REFRESH_TOKEN_EXPIRES_IN || "7d",
-    // gameSecret: process.env.JWT_GAME_SECRET || "your-game-secret-key",
-    issuer: "chess-api",
-    audience: "chess-client",
-  },
-
   cors: {
     ...corsOptions,
   },
@@ -60,6 +49,16 @@ export const config = {
     pingInterval: 25000,
     maxHttpBufferSize: 1e8,
   },
+
+  auth: {
+    google: {
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+    },
+    github: {
+      clientId: process.env.GITHUB_CLIENT_ID!,
+      clientSecret: process.env.GITHUB_CLIENT_SECRET!,
+    },
+  },
 } as const;
 
-export const JWT_CONFIG = config.jwt;
