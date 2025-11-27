@@ -1,4 +1,4 @@
-import api from "@/lib/axios";
+import { authClient } from "@/lib/auth-client";
 import {
   LoginData,
   AuthUser,
@@ -6,60 +6,51 @@ import {
   SearchData,
   SearchUserResponse,
 } from "@/types";
-import { removeToken, removeUser, saveToken, saveUser } from "../storage";
-import {
-  Tokens,
-  LoginResponseData,
-  RegisterResponseData,
-  ServerResponse,
-} from "@/types/server";
+import { removeUser, saveUser } from "../storage";
+import { Tokens, ServerResponse } from "@/types/server";
 import { handleError } from "../errors";
 import { errorToast, successToast } from "../toast";
+import api from "@/lib/axios";
 
 export const loginUser = async (
   data: LoginData
 ): Promise<{ user: AuthUser; tokens: Tokens } | null> => {
   try {
-    const response = await api.post<ServerResponse<LoginResponseData>>(
-      "/auth/login",
-      data
-    );
+    const { data: responseData, error } = await authClient.signIn.email({
+      email: data.email,
+      password: data.password,
+    });
 
-    console.log(response, "response");
-
-    if (response.status !== 200) {
+    if (error) {
+      errorToast(error.message || "Login failed");
       return null;
     }
 
-    const responseData = response.data;
-
-    if (!responseData.success) {
-      errorToast(responseData.message || "Login failed");
-      return null;
-    }
-
-    const serverData = responseData.data;
-
-    if (!serverData || !serverData.tokens) {
-      errorToast("Invalid server response");
+    if (!responseData) {
+      errorToast("No response from server");
       return null;
     }
 
     const user: AuthUser = {
-      id: serverData.id!,
-      name: serverData.name!,
-      email: serverData.email!,
+      id: responseData.user.id,
+      email: responseData.user.email || "",
+      // @ts-ignore - custom fields might not be typed in client yet
+      username: responseData.user.username || responseData.user.name || "",
     };
 
+    // Better Auth uses cookies, so we don't need to manage tokens manually.
+    // However, to keep compatibility with existing store, we can return dummy tokens or null.
+    // Ideally, we should refactor the store to not rely on tokens.
     const tokens: Tokens = {
-      accessToken: serverData.tokens.accessToken,
-      refreshToken: serverData.tokens.refreshToken,
+      accessToken: "cookie-based-session",
+      refreshToken: "cookie-based-session",
     };
 
     saveUser(user);
-    saveToken("accessToken", tokens.accessToken);
-    saveToken("refreshToken", tokens.refreshToken);
-    successToast(responseData.message || "Logged in successfully");
+    // saveToken("accessToken", tokens.accessToken); // No need to save tokens
+    // saveToken("refreshToken", tokens.refreshToken);
+
+    successToast("Logged in successfully");
 
     return { user, tokens };
   } catch (err: unknown) {
@@ -68,33 +59,39 @@ export const loginUser = async (
   }
 };
 
-export const registerUser = async (data: RegisterData): Promise<null> => {
+export const registerUser = async (data: RegisterData): Promise<boolean> => {
   try {
-    const response = await api.post<ServerResponse<RegisterResponseData>>(
-      "/auth/register",
-      JSON.stringify(data)
-    );
+    const { data: responseData, error } = await authClient.signUp.email({
+      email: data.email,
+      password: data.password,
+      name: data.username,
+      // @ts-ignore - passing extra fields
+      username: data.username,
+    });
 
-    if (!response.data.success || !response.data.data) {
-      console.error("Registration failed");
-      errorToast(response.data.message);
-      return null;
+    if (error) {
+      console.error("Registration failed", error);
+      errorToast(error.message || "Registration failed");
+      return false;
     }
-    successToast(response.data.message);
-    return null;
+
+    successToast("Account created successfully");
+    return true;
   } catch (err) {
     console.error("Registration error:", err);
-    return null;
+    errorToast("An unexpected error occurred");
+    return false;
   }
 };
 
 export const logoutUser = async () => {
   try {
-    await api.post("/auth/logout");
+    await authClient.signOut();
     removeUser();
-    removeToken("accessToken");
-    removeToken("refreshToken");
+    // removeToken("accessToken");
+    // removeToken("refreshToken");
     console.log("Logged out successfully");
+    successToast("Logged out successfully");
   } catch (err) {
     console.error("Logout error:", err);
   }
