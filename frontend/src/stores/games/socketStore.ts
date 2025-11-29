@@ -34,6 +34,11 @@ export const useGameSocketStore = create<GameSocketState>((set, get) => {
       });
     });
 
+    gameSocket.on("gameResigned", () => {
+      // We could update local state, but the page will likely refetch
+      // or we can set a status in gameState if supported
+    });
+
     gameSocket.on("disconnect", () => {
       set({
         gameState: null,

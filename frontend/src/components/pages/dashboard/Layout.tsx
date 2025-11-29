@@ -79,7 +79,7 @@ const DashboardLayout: React.FC = () => {
         </header>
 
         {/* Main Content Area */}
-        <main className="flex-1 overflow-y-auto p-4 md:p-8 scroll-smooth">
+        <main className="flex-1 overflow-y-auto scroll-smooth p-4">
           <AnimatePresence mode="wait">
             <motion.div
               key={location.pathname}

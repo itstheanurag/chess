@@ -66,3 +66,13 @@ export const callGetAllGameStatsApi = async (): Promise<{
     return null;
   }
 };
+
+export const callResignGameApi = async (gameId: string): Promise<boolean> => {
+  try {
+    await api.post(`/games/${gameId}/resign`);
+    return true;
+  } catch (error) {
+    console.error("Error resigning game:", error);
+    return false;
+  }
+};
