@@ -3,6 +3,8 @@ import { useGameStore } from "@/stores";
 import { useAuthStore } from "@/stores";
 import { GameType, SearchUserResponse, SearchData } from "@/types";
 import { useState, useEffect } from "react";
+import Select from "@/components/ui/Select";
+import { createPortal } from "react-dom";
 
 type Props = {
   onClose: () => void;
@@ -57,15 +59,15 @@ export default function CreateGameModal({ onClose }: Props) {
     return () => clearTimeout(handler);
   }, [searchQuery, searchUser, selectedUser]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    createGame();
+    await createGame();
     listGames();
     onClose();
   };
 
-  return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+  return createPortal(
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-[100]">
       <div className="bg-card text-card-foreground rounded-2xl max-w-md w-full p-6 border border-border shadow-2xl">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold tracking-tight">Create New Game</h2>
@@ -83,19 +85,18 @@ export default function CreateGameModal({ onClose }: Props) {
             <label className="block text-sm font-medium mb-2 text-muted-foreground">
               Game Type
             </label>
-            <select
+            <Select
               value={gameType}
-              onChange={(e) => {
-                setGameType(e.target.value as any);
-                setSelectedUser(null); // reset selection when type changes
+              onChange={(value) => {
+                setGameType(value as any);
+                setSelectedUser(null);
                 setPasscode("");
               }}
-              className="w-full bg-secondary/30 border border-border rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
-              required
-            >
-              <option value={GameType.PUBLIC}>Public</option>
-              <option value={GameType.PRIVATE}>Private</option>
-            </select>
+              options={[
+                { value: GameType.PUBLIC, label: "Public" },
+                { value: GameType.PRIVATE, label: "Private" },
+              ]}
+            />
           </div>
 
           {/* Private game options */}
@@ -203,6 +204,7 @@ export default function CreateGameModal({ onClose }: Props) {
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

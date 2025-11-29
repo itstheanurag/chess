@@ -60,8 +60,9 @@ export default function GameCard({ game }: { game: Game }) {
   };
 
   const handleCardClick = () => {
-    if (isUserInGame && game.status == "ongoing") {
+    if (isUserInGame) {
       navigate(`/dashboard/game/${game.id}`);
+      return;
     }
 
     if (game.status === "ongoing" && !isUserInGame) {
@@ -75,7 +76,7 @@ export default function GameCard({ game }: { game: Game }) {
       className={`
         group relative overflow-hidden rounded-2xl border border-border/50 bg-card p-5 transition-all duration-300
         ${
-          game.status === "ongoing" && !isUserInGame
+          isUserInGame || (game.status === "ongoing" && !isUserInGame)
             ? "cursor-pointer hover:shadow-lg hover:border-primary/30"
             : "cursor-default"
         }
@@ -149,29 +150,28 @@ export default function GameCard({ game }: { game: Game }) {
           {game.status === "waiting" && (
             <div className="flex gap-2 w-full sm:w-auto mt-2 sm:mt-0">
               <button
-                onClick={handleJoinPlayer}
-                disabled={isUserInGame}
-                className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 text-sm rounded-xl font-bold transition-all shadow-lg ${
-                  isUserInGame
-                    ? "bg-secondary text-muted-foreground cursor-not-allowed"
-                    : "bg-primary text-primary-foreground hover:bg-primary/90 hover:shadow-primary/25"
-                }`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (isUserInGame) {
+                    navigate(`/dashboard/game/${game.id}`);
+                  } else {
+                    handleJoinPlayer(e);
+                  }
+                }}
+                className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 text-sm rounded-xl font-bold transition-all shadow-lg bg-primary text-primary-foreground hover:bg-primary/90 hover:shadow-primary/25"
               >
                 <Play size={14} fill="currentColor" />
-                Join
+                {isUserInGame ? "Enter" : "Join"}
               </button>
-              <button
-                onClick={handleJoinSpectator}
-                disabled={isUserInGame}
-                className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 text-sm rounded-xl font-bold transition-all border border-border bg-card hover:bg-secondary ${
-                  isUserInGame
-                    ? "opacity-50 cursor-not-allowed"
-                    : "text-foreground"
-                }`}
-              >
-                <Eye size={14} />
-                Watch
-              </button>
+              {!isUserInGame && (
+                <button
+                  onClick={handleJoinSpectator}
+                  className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 text-sm rounded-xl font-bold transition-all border border-border bg-card hover:bg-secondary text-foreground"
+                >
+                  <Eye size={14} />
+                  Watch
+                </button>
+              )}
             </div>
           )}
         </div>

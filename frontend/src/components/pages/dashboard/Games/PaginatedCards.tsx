@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import Select from "@/components/ui/Select";
 import GameCard from "./GameCard";
 import { useGameStore } from "@/stores";
 import { GameStatusEnum, GameType, SearchGame } from "@/types";
@@ -65,50 +66,40 @@ export default function PaginatedGamesCards() {
         </div>
 
         <div className="flex gap-3">
-          <div className="relative">
-            <Filter
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-              size={16}
-            />
-            <select
+          <div className="w-48">
+            <Select
               value={statusFilter || ""}
-              onChange={(e) =>
-                setStatusFilter(
-                  e.target.value ? (e.target.value as GameStatusEnum) : null
-                )
+              onChange={(value) =>
+                setStatusFilter(value ? (value as GameStatusEnum) : null)
               }
-              className="pl-10 pr-8 py-3 bg-secondary/30 border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 appearance-none cursor-pointer hover:bg-secondary/50 transition-colors"
-            >
-              <option value="">All Status</option>
-              {Object.values(GameStatusEnum).map((status) => (
-                <option key={status} value={status}>
-                  {status.replace(/_/g, " ")}
-                </option>
-              ))}
-            </select>
+              options={[
+                { value: "", label: "All Status" },
+                ...Object.values(GameStatusEnum).map((status) => ({
+                  value: status,
+                  label: status.replace(/_/g, " "),
+                })),
+              ]}
+              icon={<Filter size={16} />}
+              placeholder="All Status"
+            />
           </div>
 
-          <div className="relative">
-            <Filter
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-              size={16}
-            />
-            <select
+          <div className="w-48">
+            <Select
               value={gameTypeFilter || ""}
-              onChange={(e) =>
-                setGameTypeFilter(
-                  e.target.value ? (e.target.value as GameType) : null
-                )
+              onChange={(value) =>
+                setGameTypeFilter(value ? (value as GameType) : null)
               }
-              className="pl-10 pr-8 py-3 bg-secondary/30 border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 appearance-none cursor-pointer hover:bg-secondary/50 transition-colors"
-            >
-              <option value="">All Types</option>
-              {Object.values(GameType).map((type) => (
-                <option key={type} value={type}>
-                  {type.replace(/_/g, " ")}
-                </option>
-              ))}
-            </select>
+              options={[
+                { value: "", label: "All Types" },
+                ...Object.values(GameType).map((type) => ({
+                  value: type,
+                  label: type.replace(/_/g, " "),
+                })),
+              ]}
+              icon={<Filter size={16} />}
+              placeholder="All Types"
+            />
           </div>
         </div>
       </div>

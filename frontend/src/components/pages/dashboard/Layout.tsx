@@ -3,7 +3,8 @@ import { Outlet, useLocation } from "react-router-dom";
 import { AnimatePresence, motion, easeInOut } from "framer-motion";
 import { useUIStore } from "@/stores";
 import Sidebar from "./SideBar";
-import { Menu, Bell, Search } from "lucide-react";
+import { Menu, Bell, Search, PanelLeft } from "lucide-react";
+import { ModeToggle } from "@/components/ui/mode-toggle";
 
 const pageVariants = {
   initial: { opacity: 0, scale: 0.98, y: 10 },
@@ -13,7 +14,7 @@ const pageVariants = {
 
 const DashboardLayout: React.FC = () => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const { activeSection, collapsed } = useUIStore();
+  const { activeSection, collapsed, toggleCollapse } = useUIStore();
   const location = useLocation();
 
   const toggleDrawer = () => setIsDrawerOpen(!isDrawerOpen);
@@ -42,6 +43,12 @@ const DashboardLayout: React.FC = () => {
             >
               <Menu className="h-6 w-6" />
             </button>
+            <button
+              onClick={toggleCollapse}
+              className="hidden lg:block p-2 rounded-xl hover:bg-secondary/50 text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <PanelLeft className="h-6 w-6" />
+            </button>
 
             <div className="flex flex-col">
               <h1 className="text-xl font-bold capitalize tracking-tight">
@@ -67,6 +74,7 @@ const DashboardLayout: React.FC = () => {
               <Bell className="w-5 h-5" />
               <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-background" />
             </button>
+            <ModeToggle />
           </div>
         </header>
 

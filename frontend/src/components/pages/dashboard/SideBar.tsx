@@ -1,6 +1,5 @@
 import React from "react";
 import {
-  Settings,
   LogOut,
   Activity,
   Clock,
@@ -8,8 +7,7 @@ import {
   Target,
   Trophy,
   Users,
-  ChevronLeft,
-  ChevronRight,
+  User,
 } from "lucide-react";
 import AuthUser from "../auth/User";
 import { useAuthStore, useUIStore } from "@/stores";
@@ -91,7 +89,13 @@ const Sidebar: React.FC<SidebarProps> = ({ isDrawerOpen, toggleDrawer }) => {
         {/* User Profile (Collapsible) */}
         {!collapsed && (
           <div className="p-4">
-            <div className="p-3 rounded-2xl bg-secondary/30 border border-border/50">
+            <div
+              onClick={() => {
+                navigate("/dashboard/profile");
+                if (window.innerWidth < 1024) toggleDrawer();
+              }}
+              className="p-3 rounded-2xl bg-secondary/30 border border-border/50 cursor-pointer hover:bg-secondary/50 transition-colors"
+            >
               <AuthUser />
             </div>
           </div>
@@ -148,16 +152,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isDrawerOpen, toggleDrawer }) => {
         {/* Footer Actions */}
         <div className="p-4 border-t border-border/40 flex flex-col gap-2">
           <button
-            className={`
-            flex items-center p-3 rounded-xl text-muted-foreground hover:bg-secondary/50 hover:text-foreground transition-colors
-            ${collapsed ? "justify-center" : "w-full justify-start"}
-          `}
-          >
-            <Settings className="h-5 w-5" />
-            {!collapsed && <span className="ml-3 font-medium">Settings</span>}
-          </button>
-
-          <button
             onClick={logout}
             className={`
               flex items-center p-3 rounded-xl text-muted-foreground hover:bg-red-500/10 hover:text-red-500 transition-colors
@@ -166,14 +160,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isDrawerOpen, toggleDrawer }) => {
           >
             <LogOut className="h-5 w-5" />
             {!collapsed && <span className="ml-3 font-medium">Logout</span>}
-          </button>
-
-          {/* Collapse Toggle */}
-          <button
-            onClick={toggleCollapse}
-            className="hidden lg:flex items-center justify-center w-full p-2 mt-2 rounded-lg hover:bg-secondary/50 text-muted-foreground transition-colors"
-          >
-            {collapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
           </button>
         </div>
       </div>
