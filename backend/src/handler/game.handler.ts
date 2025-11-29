@@ -1,18 +1,17 @@
+import { getIO } from "@/libs/socket";
+import { loadGame } from "@/games";
 import { Request, Response } from "express";
 import { ChessGame } from "@/games/chess.game";
 import { Square } from "chess.js";
 import { sendResponse, sendError } from "@/utils/helper";
-import { AuthenticatedRequest, Stats } from "@/types";
+import { AuthenticatedRequest } from "@/types";
 import {
   createGameSchema,
   GameStatus,
   GameType,
   paginatedGameSearchSchema,
 } from "@/schema/game";
-import { gameStorage } from "@/storage/game";
-import { db } from "@/db/drizzle";
-import { game } from "@/db/schema";
-import { eq, or, and, count } from "drizzle-orm";
+import { gameStorage } from "@/storage";
 
 export const createGame = async (req: AuthenticatedRequest, res: Response) => {
   try {
@@ -284,50 +283,7 @@ export const GetAllGameStats = async (
 ) => {
   try {
     const userId = req.user!.id;
-
-    const [totalResult] = await db
-      .select({ count: count() })
-      .from(game)
-      .where(
-        or(eq(game.whitePlayerId, userId), eq(game.blackPlayerId, userId))
-      );
-
-    const total = totalResult?.count ?? 0;
-
-    const [winsResult] = await db
-      .select({ count: count() })
-      .from(game)
-      .where(
-        or(
-          and(eq(game.whitePlayerId, userId), eq(game.result, "white_win")),
-          and(eq(game.blackPlayerId, userId), eq(game.result, "black_win"))
-        )
-      );
-    const wins = winsResult?.count ?? 0;
-
-    const [lossesResult] = await db
-      .select({ count: count() })
-      .from(game)
-      .where(
-        or(
-          and(eq(game.whitePlayerId, userId), eq(game.result, "black_win")),
-          and(eq(game.blackPlayerId, userId), eq(game.result, "white_win"))
-        )
-      );
-    const losses = lossesResult?.count ?? 0;
-
-    const [drawsResult] = await db
-      .select({ count: count() })
-      .from(game)
-      .where(
-        or(
-          and(eq(game.whitePlayerId, userId), eq(game.result, "draw")),
-          and(eq(game.blackPlayerId, userId), eq(game.result, "draw"))
-        )
-      );
-    const draws = drawsResult?.count ?? 0;
-
-    const stats: Stats = { total, wins, losses, draws };
+    const stats = await gameStorage.getGameStats(userId);
     return sendResponse(res, 200, { stats }, "Stats fetched successfully");
   } catch (error) {
     console.error("Error fetching game stats:", error);
@@ -335,6 +291,52 @@ export const GetAllGameStats = async (
       res,
       500,
       "Failed to fetch game stats",
+      error instanceof Error ? error.message : "Unknown error"
+    );
+  }
+};
+
+export const resignGame = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { gameId } = req.params;
+    const userId = req.user!.id;
+
+    const game = await loadGame(gameId);
+    if (!game) return sendError(res, 404, "Game not found");
+
+    const state = game.getState();
+    let playerColor: "w" | "b" | null = null;
+    if (state.whitePlayer === userId) playerColor = "w";
+    else if (state.blackPlayer === userId) playerColor = "b";
+
+    if (!playerColor) {
+      return sendError(res, 403, "You are not a player in this game");
+    }
+
+    // Update DB
+    const winner = playerColor === "w" ? "black_win" : "white_win";
+    const updated = await gameStorage.update(gameId, {
+      status: "FINISHED",
+      result: winner,
+      endedAt: new Date(),
+    });
+
+    // Emit event
+    const io = getIO();
+    io.of("/game")
+      .to(gameId)
+      .emit("gameResigned", {
+        winner: playerColor === "w" ? "b" : "w",
+        resignedBy: playerColor,
+      });
+
+    return sendResponse(res, 200, updated, "Game resigned successfully");
+  } catch (error) {
+    console.error("Error resigning game:", error);
+    return sendError(
+      res,
+      500,
+      "Failed to resign game",
       error instanceof Error ? error.message : "Unknown error"
     );
   }

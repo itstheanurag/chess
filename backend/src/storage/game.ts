@@ -117,4 +117,44 @@ export const gameStorage = {
       total: totalEntries,
     };
   },
+
+  async getGameStats(userId: string) {
+    const [result] = await db
+      .select({
+        total: sql<number>`
+        COUNT(*) FILTER (WHERE ${game.whitePlayerId} = ${userId} OR ${game.blackPlayerId} = ${userId})
+      `,
+        wins: sql<number>`
+        COUNT(*) FILTER (
+          WHERE 
+            (${game.whitePlayerId} = ${userId} AND ${game.result} = 'white_win')
+            OR
+            (${game.blackPlayerId} = ${userId} AND ${game.result} = 'black_win')
+        )
+      `,
+        losses: sql<number>`
+        COUNT(*) FILTER (
+          WHERE 
+            (${game.whitePlayerId} = ${userId} AND ${game.result} = 'black_win')
+            OR
+            (${game.blackPlayerId} = ${userId} AND ${game.result} = 'white_win')
+        )
+      `,
+        draws: sql<number>`
+        COUNT(*) FILTER (
+          WHERE 
+            (${game.whitePlayerId} = ${userId} OR ${game.blackPlayerId} = ${userId})
+            AND ${game.result} = 'draw'
+        )
+      `,
+      })
+      .from(game);
+
+    return {
+      total: Number(result.total),
+      wins: Number(result.wins),
+      losses: Number(result.losses),
+      draws: Number(result.draws),
+    };
+  },
 };

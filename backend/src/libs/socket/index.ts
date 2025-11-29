@@ -5,8 +5,10 @@ import { initializeChatNamespace } from "./chat.socket";
 import { socketAuthGuard } from "@/middlewares";
 import { config } from "@/config";
 
+let io: IOServer | null = null;
+
 export const startSocketServer = (server: HttpServer) => {
-  const io = new IOServer(server, {
+  io = new IOServer(server, {
     cors: config.cors,
     path: "/socket.io/",
     serveClient: false,
@@ -39,5 +41,10 @@ export const startSocketServer = (server: HttpServer) => {
     });
   });
 
+  return io;
+};
+
+export const getIO = () => {
+  if (!io) throw new Error("Socket.io not initialized");
   return io;
 };

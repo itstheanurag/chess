@@ -20,64 +20,12 @@ export const searchUser = async (
     }
 
     const parsedData = parsedResult.data;
-
-    // const query = parsedData.q.trim();
-    // const pageNum = +parsedData.page || 1;
-    // const pageSize = +parsedData.size || 15;
-    // const skip = (pageNum - 1) * pageSize;
-
-    // const totalEntries = await prisma.user.count({
-    //   where: {
-    //     AND: [
-    //       {
-    //         OR: [
-    //           { username: { contains: query, mode: "insensitive" } },
-    //           { email: { contains: query, mode: "insensitive" } },
-    //         ],
-    //       },
-    //       { NOT: { id: userId } },
-    //     ],
-    //   },
-    // });
-
-    // const users = await prisma.user.findMany({
-    //   where: {
-    //     AND: [
-    //       {
-    //         OR: [
-    //           { username: { contains: query, mode: "insensitive" } },
-    //           { email: { contains: query, mode: "insensitive" } },
-    //         ],
-    //       },
-    //       { NOT: { id: userId } },
-    //     ],
-    //   },
-    //   select: {
-    //     id: true,
-    //     username: true,
-    //     email: true,
-    //   },
-    //   skip,
-    //   take: pageSize,
-    // });
-
-    // const formatted = users.map((u) => ({
-    //   id: u.id.toString(),
-    //   name: u.username,
-    //   email: u.email,
-    // }));
-
     const data = await authStorage.searchUsers({ userId, ...parsedData });
 
     return sendResponse(
       res,
       200,
       {
-        // users: formatted,
-        // page: pageNum,
-        // size: pageSize,
-        // totalEntries,
-
         ...data,
       },
       "Users fetched successfully"
