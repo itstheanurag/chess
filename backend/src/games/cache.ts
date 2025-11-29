@@ -49,6 +49,13 @@ export async function loadGame(gameId: string): Promise<ChessGame | null> {
   const cached = await getCachedGame(gameId);
   if (cached) {
     const game = new ChessGame(cached.fen);
+    if (cached.state.whitePlayer)
+      game.joinPlayer(cached.state.whitePlayer, "w");
+    if (cached.state.blackPlayer)
+      game.joinPlayer(cached.state.blackPlayer, "b");
+    if (cached.state.spectators) {
+      cached.state.spectators.forEach((s: string) => game.addSpectator(s));
+    }
 
     return game;
   }

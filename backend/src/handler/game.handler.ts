@@ -126,7 +126,12 @@ export const getGame = async (req: Request, res: Response) => {
     return sendResponse(
       res,
       200,
-      { gameId, ...chess.getState(), dbGame: existingGame },
+      {
+        gameId,
+        ...chess.getState(),
+        ...existingGame,
+        dbGame: existingGame,
+      },
       "Game fetched successfully"
     );
   } catch (error) {

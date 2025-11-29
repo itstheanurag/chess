@@ -19,6 +19,10 @@ export const startSocketServer = (server: HttpServer) => {
   };
 
   Object.entries(namespaces).forEach(([name, nsp]) => {
+    // Apply authentication middleware
+    const isAuthRequired = name !== "chat";
+    nsp.use(socketAuthGuard(isAuthRequired));
+
     if (name === "game") initializeGameNamespace(nsp);
     if (name === "chat") initializeChatNamespace(nsp);
 

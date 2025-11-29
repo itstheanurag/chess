@@ -15,6 +15,20 @@ export const gameStorage = {
         moves: {
           orderBy: (moves, { asc }) => [asc(moves.moveNumber)],
         },
+        whitePlayer: {
+          columns: {
+            id: true,
+            username: true,
+            email: true,
+          },
+        },
+        blackPlayer: {
+          columns: {
+            id: true,
+            username: true,
+            email: true,
+          },
+        },
       },
     });
     return result;

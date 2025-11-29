@@ -11,7 +11,6 @@ export interface MoveData {
     to: string;
     promotion?: "q" | "r" | "b" | "n";
   };
-  playerName: string;
 }
 
 export interface ChatMessage {

@@ -2,6 +2,7 @@ import { Namespace, Socket } from "socket.io";
 import { JoinGameData, User, MoveData } from "@/types";
 import { Square } from "chess.js";
 import { loadGame, cacheGame } from "@/games";
+import { gameStorage } from "@/storage/game";
 
 export const initializeGameNamespace = (nsp: Namespace) => {
   console.log(`✅ Game namespace initialized: ${nsp.name}`);
@@ -25,20 +26,35 @@ export const initializeGameNamespace = (nsp: Namespace) => {
 
       socket.join(gameId);
 
-      if (isSpectator) {
-        game.addSpectator(playerName);
+      const userId = socket.user?.id;
+      const state = game.getState();
+      let playerColor: "w" | "b" | null = null;
+
+      if (userId) {
+        if (state.whitePlayer === userId) playerColor = "w";
+        else if (state.blackPlayer === userId) playerColor = "b";
+      }
+
+      if (playerColor) {
+        // Player joining
+        socket.emit("gameJoined", {
+          gameState: state,
+          playerColor,
+          roomId: gameId,
+        });
+      } else {
+        // Spectator joining
+        game.addSpectator(playerName || socket.user?.name || "Anonymous");
         await cacheGame(gameId, game);
 
-        socket.emit("spectatorJoined", {
+        socket.emit("gameJoined", {
+          gameState: state,
+          playerColor: null,
           roomId: gameId,
-          gameState: game.getState(),
         });
 
-        socket.to(gameId).emit("spectatorJoined", { playerName });
-      } else {
-        socket.emit("error", {
-          success: false,
-          message: "Players must join via API, not socket",
+        socket.to(gameId).emit("spectatorJoined", {
+          playerName: playerName || socket.user?.name || "Anonymous",
         });
       }
     });
@@ -92,6 +108,38 @@ export const initializeGameNamespace = (nsp: Namespace) => {
       if (!result.success) {
         socket.emit("error", { success: false, message: result.error });
         return;
+      }
+
+      // Persist move and update game state in DB
+      const dbGame = await gameStorage.findById(gameId);
+      if (dbGame) {
+        await gameStorage.createMove({
+          gameId,
+          moveNumber: dbGame.moves.length + 1,
+          playerId: userId,
+          fromSquare: from,
+          toSquare: to,
+          promotion,
+          fen: game.fen(),
+        });
+
+        const updates: any = { fen: game.fen() };
+
+        if (result.status === "checkmate") {
+          updates.status = "FINISHED";
+          updates.result = game.turn() === "w" ? "black_win" : "white_win";
+          updates.endedAt = new Date();
+        } else if (
+          ["draw", "stalemate", "threefold", "insufficient", "50move"].includes(
+            result.status
+          )
+        ) {
+          updates.status = "FINISHED";
+          updates.result = "draw";
+          updates.endedAt = new Date();
+        }
+
+        await gameStorage.update(gameId, updates);
       }
 
       await cacheGame(gameId, game);

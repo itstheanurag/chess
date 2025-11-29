@@ -24,6 +24,12 @@ export const socketAuthGuard = (isAuthRequired: boolean = true) => {
         headers.append("cookie", socket.handshake.headers.cookie);
       }
 
+      // Check for token in handshake auth (Socket.IO standard)
+      const authToken = socket.handshake.auth?.token;
+      if (authToken) {
+        headers.append("authorization", `Bearer ${authToken}`);
+      }
+
       // If using bearer token for mobile/other clients, handle that too
       const authHeader = socket.handshake.headers?.authorization;
       if (authHeader) {
