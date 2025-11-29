@@ -5,6 +5,7 @@ interface UIStore {
   collapsed: boolean;
   setActiveSection: (section: string) => void;
   toggleCollapse: () => void;
+  setCollapsed: (collapsed: boolean) => void;
 }
 
 export const useUIStore = create<UIStore>((set) => ({
@@ -12,4 +13,5 @@ export const useUIStore = create<UIStore>((set) => ({
   collapsed: true,
   setActiveSection: (section) => set({ activeSection: section }),
   toggleCollapse: () => set((state) => ({ collapsed: !state.collapsed })),
+  setCollapsed: (collapsed) => set({ collapsed }),
 }));

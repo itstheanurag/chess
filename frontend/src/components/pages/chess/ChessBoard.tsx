@@ -41,8 +41,7 @@ const ChessBoard: React.FC<ChessBoardProps> = ({ board: initialBoard }) => {
 
   return (
     <>
-      <p>You are Player: {"playerName"}</p>
-      <div className="grid grid-cols-8 aspect-square w-full max-w-[500px] border-4 border-gray-800">
+      <div className="grid grid-cols-8 aspect-square w-full border-4 border-gray-800">
         {board.map((row, rIdx) =>
           row.map((piece, cIdx) => {
             const square = convertToSquare(rIdx, cIdx);

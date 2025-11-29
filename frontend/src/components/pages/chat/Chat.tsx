@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { MessageCircle, X } from "lucide-react"; // using Lucide icons
+import { useState, useRef, useEffect } from "react";
+import { MessageCircle, Send, X, ChevronUp, ChevronDown } from "lucide-react";
 
 interface Message {
   id: number;
@@ -10,7 +10,16 @@ interface Message {
 const ChatWindow: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
-  const [collapsed, setCollapsed] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, isOpen]);
 
   const handleSend = () => {
     if (!input.trim()) return;
@@ -21,65 +30,95 @@ const ChatWindow: React.FC = () => {
     setInput("");
   };
 
-  return (
-    <div
-      className={`flex flex-col bg-white shadow-lg rounded-lg overflow-hidden transition-all duration-300 ${
-        collapsed ? "w-fit h-fit" : "h-[500px] w-fit"
-      }`}
-    >
-      <div className="p-2 border-b border-gray-200 font-semibold flex justify-between items-center">
-        {!collapsed && <span>Game Chat</span>}
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") handleSend();
+  };
 
-        <button
-          onClick={() => setCollapsed((prev) => !prev)}
-          className="p-1 rounded-full bg-gray-200 hover:bg-gray-300 transition flex items-center justify-center"
-        >
-          {collapsed ? <MessageCircle size={20} /> : <X size={20} />}
+  if (!isOpen) {
+    return (
+      <button
+        onClick={() => setIsOpen(true)}
+        className="flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-full shadow-lg hover:bg-primary/90 transition-all hover:scale-105 font-medium"
+      >
+        <MessageCircle size={20} />
+        <span>Chat</span>
+        <div className="bg-white/20 px-1.5 rounded text-xs font-bold">
+          {messages.length}
+        </div>
+      </button>
+    );
+  }
+
+  return (
+    <div className="w-[350px] h-[500px] flex flex-col bg-card border border-border rounded-2xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom-5 duration-200">
+      {/* Header */}
+      <div
+        className="p-4 border-b border-border/50 bg-primary text-primary-foreground flex items-center justify-between cursor-pointer"
+        onClick={() => setIsOpen(false)}
+      >
+        <div className="flex items-center gap-2 font-semibold">
+          <MessageCircle size={18} />
+          <span>Game Chat</span>
+        </div>
+        <button className="p-1 hover:bg-white/20 rounded-full transition-colors">
+          <ChevronDown size={18} />
         </button>
       </div>
 
       {/* Messages */}
-      {!collapsed && (
-        <>
-          <div className="flex-1 overflow-y-auto p-3 space-y-2">
-            {messages.length === 0 ? (
-              <p className="text-gray-400 text-sm text-center">
-                No messages yet...
-              </p>
-            ) : (
-              messages.map((msg) => (
-                <div
-                  key={msg.id}
-                  className={`p-2 rounded-lg max-w-[80%] break-words ${
-                    msg.user === "You"
-                      ? "bg-blue-500 text-white ml-auto"
-                      : "bg-gray-200 text-gray-800"
-                  }`}
-                >
-                  <span className="block text-xs font-medium">{msg.user}</span>
-                  <span>{msg.text}</span>
-                </div>
-              ))
-            )}
+      <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-secondary/5">
+        {messages.length === 0 ? (
+          <div className="h-full flex flex-col items-center justify-center text-muted-foreground opacity-50">
+            <MessageCircle size={40} className="mb-2" />
+            <p className="text-sm">No messages yet</p>
+            <p className="text-xs">Say hello to your opponent!</p>
           </div>
-
-          {/* Input Box */}
-          <div className="p-3 border-t border-gray-200 flex gap-1">
-            <input
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Type a message..."
-              className="flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
-            />
-            <button
-              onClick={handleSend}
-              className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition"
+        ) : (
+          messages.map((msg) => (
+            <div
+              key={msg.id}
+              className={`flex flex-col ${
+                msg.user === "You" ? "items-end" : "items-start"
+              }`}
             >
-              Send
-            </button>
-          </div>
-        </>
-      )}
+              <div
+                className={`px-3 py-2 rounded-xl max-w-[85%] text-sm break-words shadow-sm ${
+                  msg.user === "You"
+                    ? "bg-primary text-primary-foreground rounded-tr-none"
+                    : "bg-card border border-border text-foreground rounded-tl-none"
+                }`}
+              >
+                {msg.text}
+              </div>
+              <span className="text-[10px] text-muted-foreground mt-1 px-1">
+                {msg.user}
+              </span>
+            </div>
+          ))
+        )}
+        <div ref={messagesEndRef} />
+      </div>
+
+      {/* Input Box */}
+      <div className="p-3 border-t border-border/50 bg-card">
+        <div className="flex gap-2">
+          <input
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="Type a message..."
+            autoFocus
+            className="flex-1 px-4 py-2 bg-secondary/30 border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+          />
+          <button
+            onClick={handleSend}
+            disabled={!input.trim()}
+            className="p-2 bg-primary text-primary-foreground rounded-xl hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+          >
+            <Send size={18} />
+          </button>
+        </div>
+      </div>
     </div>
   );
 };
