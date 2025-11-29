@@ -115,6 +115,11 @@ export interface GameSocketState {
   clearSelection: () => void;
   resetGame: () => void;
   disconnect: () => void;
+  joinGame: (data: {
+    room: string;
+    playerName: string;
+    isSpectator?: boolean;
+  }) => void;
 }
 
 export enum GameType {

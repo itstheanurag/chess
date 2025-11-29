@@ -56,7 +56,30 @@ export const useGameSocketStore = create<GameSocketState>((set, get) => {
     playerColor: null,
     connect: initializeSocket,
 
+    joinGame: (data: {
+      room: string;
+      playerName: string;
+      isSpectator?: boolean;
+    }) => {
+      if (!gameSocket) initializeSocket();
+      // Wait for connection? Usually socket.io buffers events.
+      // But initializeSocket sets gameSocket.
+      // We might need to wait a bit or just emit.
+      // If initializeSocket creates the socket, it's sync.
+
+      // We need to make sure we don't emit before connection if possible, but socket.io handles it.
+      // However, initializeSocket checks `if (gameSocket) return`.
+
+      // Let's just emit.
+      gameSocket?.emit("joinGame", data);
+    },
+
     selectPiece: (square) => {
+      const { playerColor } = get();
+      const piece = chess.get(square);
+
+      if (piece?.color !== playerColor) return;
+
       const moves = chess.moves({ square, verbose: true }) as Move[];
       set({ selected: square, validMoves: moves });
     },

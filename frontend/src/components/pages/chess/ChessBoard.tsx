@@ -32,8 +32,12 @@ const ChessBoard: React.FC<ChessBoardProps> = ({ board: initialBoard }) => {
     const piece = getPieceAt(gameState.board, r, c);
 
     if (selected) {
-      // makeMove({ from: selected, to: square });
-      clearSelection();
+      const move = validMoves.find((m) => m.to === square);
+      if (move) {
+        makeMove(move);
+      } else {
+        clearSelection();
+      }
     } else if (piece) {
       selectPiece(square);
     }
