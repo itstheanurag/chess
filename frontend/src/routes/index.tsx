@@ -3,7 +3,6 @@ import { Routes, Route, useLocation, Navigate } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 import Loading from "../components/ui/Loading";
 
-
 const Home = lazy(() => import("../components/Home/Home"));
 const Login = lazy(() => import("../components/pages/auth/Login"));
 const Register = lazy(() => import("../components/pages/auth/SignUp"));
@@ -18,6 +17,10 @@ const ChessDashboard = lazy(
 );
 const GameCreatePage = lazy(
   () => import("@/components/pages/dashboard/Games/GameCreatePage")
+);
+
+const ProfilePage = lazy(
+  () => import("@/components/pages/dashboard/Profile/ProfilePage")
 );
 
 import PublicRoute from "./PublicRoutes";
@@ -64,6 +67,8 @@ const AnimatedRoutes: React.FC = () => {
             <Route path="leaderboard" element={<>coming soon...</>} />
             <Route path="puzzles" element={<>coming soon...</>} />
             <Route path="friends" element={<>coming soon...</>} />
+
+            <Route path="profile" element={<ProfilePage />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/" replace />} />
