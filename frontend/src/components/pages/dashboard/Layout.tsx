@@ -14,7 +14,7 @@ const pageVariants = {
 
 const DashboardLayout: React.FC = () => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const { activeSection, collapsed, toggleCollapse } = useUIStore();
+  const { collapsed, toggleCollapse } = useUIStore();
   const location = useLocation();
 
   const toggleDrawer = () => setIsDrawerOpen(!isDrawerOpen);
@@ -35,7 +35,7 @@ const DashboardLayout: React.FC = () => {
         } h-screen`}
       >
         {/* Header */}
-        <header className="sticky top-0 z-20 w-full bg-background/60 backdrop-blur-xl border-b border-border/40 px-6 py-4 flex items-center justify-between">
+        <header className="h-16 sticky top-0 z-20 w-full bg-background/60 backdrop-blur-xl border-b border-border/40 px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <button
               onClick={toggleDrawer}
@@ -43,21 +43,6 @@ const DashboardLayout: React.FC = () => {
             >
               <Menu className="h-6 w-6" />
             </button>
-            <button
-              onClick={toggleCollapse}
-              className="hidden lg:block p-2 rounded-xl hover:bg-secondary/50 text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <PanelLeft className="h-6 w-6" />
-            </button>
-
-            <div className="flex flex-col">
-              <h1 className="text-xl font-bold capitalize tracking-tight">
-                {activeSection}
-              </h1>
-              <p className="text-xs text-muted-foreground hidden sm:block">
-                Welcome back, Grandmaster
-              </p>
-            </div>
           </div>
 
           <div className="flex items-center gap-4">

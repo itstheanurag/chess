@@ -1,38 +1,43 @@
-import React from "react";
-
 const Logo = ({ className = "w-8 h-8" }: { className?: string }) => {
   return (
     <svg
-      viewBox="0 0 100 100"
+      viewBox="0 0 24 24"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       className={className}
     >
+      {/* Head */}
+      <circle
+        cx="12"
+        cy="5"
+        r="3.5"
+        className="stroke-primary/40"
+        strokeWidth="2"
+      />
+
+      {/* Collar */}
       <path
-        d="M50 5L15 25V75L50 95L85 75V25L50 5Z"
-        className="fill-primary/20 stroke-primary"
-        strokeWidth="4"
+        d="M9 9H15"
+        className="stroke-primary/40"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+
+      {/* Body */}
+      <path
+        d="M10 9L8 18H16L14 9H10Z"
+        className="stroke-primary/40"
+        strokeWidth="2"
         strokeLinejoin="round"
       />
+
+      {/* Base */}
       <path
-        d="M50 20V80"
-        className="stroke-primary"
-        strokeWidth="4"
-        strokeLinecap="round"
+        d="M6 18H18V20C18 20.5523 17.5523 21 17 21H7C6.44772 21 6 20.5523 6 20V18Z"
+        className="stroke-primary/40"
+        strokeWidth="2"
+        strokeLinejoin="round"
       />
-      <path
-        d="M25 35L75 65"
-        className="stroke-primary"
-        strokeWidth="4"
-        strokeLinecap="round"
-      />
-      <path
-        d="M75 35L25 65"
-        className="stroke-primary"
-        strokeWidth="4"
-        strokeLinecap="round"
-      />
-      <circle cx="50" cy="50" r="10" className="fill-primary" />
     </svg>
   );
 };

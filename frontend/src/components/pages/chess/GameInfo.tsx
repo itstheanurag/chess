@@ -21,20 +21,28 @@ const GameInfo: React.FC<GameInfoProps> = ({ game }) => {
   useEffect(() => {
     if (!game?.startedAt) return;
 
-    const interval = setInterval(() => {
+    const updateTimer = () => {
       const start = new Date(game.startedAt).getTime();
-      const now = new Date().getTime();
-      const diff = Math.floor((now - start) / 1000);
+      const end = game.endedAt
+        ? new Date(game.endedAt).getTime()
+        : new Date().getTime();
+      const diff = Math.max(0, Math.floor((end - start) / 1000));
 
       const minutes = Math.floor(diff / 60)
         .toString()
         .padStart(2, "0");
       const seconds = (diff % 60).toString().padStart(2, "0");
       setElapsed(`${minutes}:${seconds}`);
-    }, 1000);
+    };
+
+    updateTimer();
+
+    if (game.endedAt) return;
+
+    const interval = setInterval(updateTimer, 1000);
 
     return () => clearInterval(interval);
-  }, [game?.startedAt]);
+  }, [game?.startedAt, game?.endedAt]);
 
   useEffect(() => {
     const handleResize = () => {

@@ -8,6 +8,7 @@ import {
   Trophy,
   Users,
   User,
+  PanelLeft,
 } from "lucide-react";
 import AuthUser from "../auth/User";
 import { useAuthStore, useUIStore } from "@/stores";
@@ -71,18 +72,20 @@ const Sidebar: React.FC<SidebarProps> = ({ isDrawerOpen, toggleDrawer }) => {
           }
         `}
       >
-        {/* Logo Area */}
-        <div className="h-20 flex items-center px-6 border-b border-border/40">
-          <div className="flex items-center gap-3 overflow-hidden">
-            <div className="relative flex-shrink-0">
-              <div className="absolute inset-0 bg-primary/20 blur-lg rounded-full" />
+        <div className="h-16 flex items-center px-6 border-b border-border/40">
+          <div className="flex items-center justify-between w-full overflow-hidden">
+            {/* Logo — hidden when collapsed */}
+            <div className={`${collapsed ? "hidden" : "block"} flex-shrink-0`}>
               <Logo className="w-8 h-8 relative z-10" />
             </div>
-            {!collapsed && (
-              <span className="font-bold text-xl tracking-tight whitespace-nowrap">
-                ChessMaster
-              </span>
-            )}
+
+            {/* Collapse Button */}
+            <button
+              onClick={toggleCollapse}
+              className="hidden lg:block p-2 rounded-xl hover:bg-secondary/50 text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <PanelLeft className="h-6 w-6" />
+            </button>
           </div>
         </div>
 

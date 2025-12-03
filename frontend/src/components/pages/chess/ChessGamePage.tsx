@@ -11,17 +11,27 @@ import ChatWindow from "../chat/Chat";
 import GameInfo from "./GameInfo";
 import { motion } from "framer-motion";
 import { Flag } from "lucide-react";
-import { callResignGameApi } from "@/utils/apis/games";
 
 const ChessGamePage = () => {
   const { gameId } = useParams<{ gameId: string }>();
   const { findOne } = useGameStore();
   const { setCollapsed } = useUIStore();
-  const { connect, joinGame, disconnect } = useGameSocketStore();
+  const { connect, joinGame, disconnect, resignGame, gameState } =
+    useGameSocketStore();
   const { authUser } = useAuthStore();
 
   const [game, setGame] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [showResignModal, setShowResignModal] = useState(false);
+
+  useEffect(() => {
+    if (gameState) {
+      setGame((prev: any) => {
+        if (!prev) return null;
+        return { ...prev, ...gameState };
+      });
+    }
+  }, [gameState]);
 
   useEffect(() => {
     // Auto-collapse sidebar to give maximum space to the board
@@ -64,10 +74,13 @@ const ChessGamePage = () => {
     }
   }, [game, authUser, gameId, joinGame]);
 
-  const handleResign = async () => {
-    if (!game?.id) return;
-    await callResignGameApi(game.id);
-    return <Navigate to="/dashboard" replace />;
+  const handleResign = () => {
+    setShowResignModal(true);
+  };
+
+  const confirmResign = () => {
+    resignGame();
+    setShowResignModal(false);
   };
 
   const isPlayer =
@@ -127,6 +140,32 @@ const ChessGamePage = () => {
       <div className="absolute bottom-6 right-6 z-50">
         <ChatWindow />
       </div>
+
+      {/* Resign Confirmation Modal */}
+      {showResignModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-card border border-border p-6 rounded-xl shadow-xl max-w-sm w-full mx-4 animate-in fade-in zoom-in duration-200">
+            <h3 className="text-xl font-bold mb-2">Resign Game?</h3>
+            <p className="text-muted-foreground mb-6">
+              Are you sure you want to resign? This will count as a loss.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setShowResignModal(false)}
+                className="px-4 py-2 rounded-lg hover:bg-secondary transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmResign}
+                className="px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white font-medium transition-colors"
+              >
+                Confirm Resign
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
