@@ -120,6 +120,7 @@ export interface GameSocketState {
     playerName: string;
     isSpectator?: boolean;
   }) => void;
+  resignGame: () => void;
 }
 
 export enum GameType {

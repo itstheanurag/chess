@@ -34,7 +34,7 @@ export const auth = betterAuth({
     additionalFields: {
       username: {
         type: "string",
-        required: false, // Make it optional initially to avoid migration issues if data exists, or handle validation elsewhere
+        required: false, 
       },
       rating: {
         type: "number",

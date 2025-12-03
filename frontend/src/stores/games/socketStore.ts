@@ -1,7 +1,8 @@
 import { create } from "zustand";
+import { toast } from "react-toastify";
 import { Chess, Move } from "chess.js";
 import { connectSocket, NamedSocket } from "@/lib";
-import { GameSocketState } from "@/types";
+import { GameSocketState, GameStateData } from "@/types";
 
 export const useGameSocketStore = create<GameSocketState>((set, get) => {
   const chess = new Chess();
@@ -34,10 +35,21 @@ export const useGameSocketStore = create<GameSocketState>((set, get) => {
       });
     });
 
-    gameSocket.on("gameResigned", () => {
-      // We could update local state, but the page will likely refetch
-      // or we can set a status in gameState if supported
-    });
+    gameSocket.on(
+      "gameResigned",
+      (data: { message?: string; gameState?: GameStateData }) => {
+        if (data?.message) {
+          toast.info(data.message);
+        }
+        if (data?.gameState) {
+          // Update the chess instance with the new FEN if needed, though resignation usually ends the game
+          if (data.gameState.fen) {
+            chess.load(data.gameState.fen);
+          }
+          set({ gameState: data.gameState });
+        }
+      }
+    );
 
     gameSocket.on("disconnect", () => {
       set({
@@ -111,6 +123,12 @@ export const useGameSocketStore = create<GameSocketState>((set, get) => {
         validMoves: [],
       });
       gameSocket?.emit("resetGame");
+    },
+
+    resignGame: () => {
+      const { room } = get();
+      if (!gameSocket || !room) return;
+      gameSocket.emit("resignGame", { room });
     },
 
     disconnect: () => {
