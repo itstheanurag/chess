@@ -5,7 +5,6 @@ import {
   listGames,
   joinGame,
   GetAllGameStats,
-  resignGame,
 } from "@/handler";
 import { authGuard } from "@/middlewares";
 
@@ -44,13 +43,6 @@ GameRouter.get("/stats", GetAllGameStats);
  * @access  Private
  */
 GameRouter.post("/:gameId/join", joinGame);
-
-/**
- * @route   POST /api/games/:gameId/resign
- * @desc    Resign a game
- * @access  Private
- */
-GameRouter.post("/:gameId/resign", resignGame);
 
 /**
  * @route   GET /api/games/:gameId

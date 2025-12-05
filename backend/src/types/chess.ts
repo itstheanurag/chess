@@ -1,5 +1,10 @@
-import { GameMove, GameSpectator, User } from "@prisma/client";
+import { InferSelectModel } from "drizzle-orm";
+import { gameMove, gameSpectator, user } from "@/db/schema";
 import { Color, Piece } from "chess.js";
+
+export type ChessUser = InferSelectModel<typeof user>;
+export type GameMove = InferSelectModel<typeof gameMove>;
+export type GameSpectator = InferSelectModel<typeof gameSpectator>;
 
 export enum GameType {
   PUBLIC = "PUBLIC",
@@ -22,6 +27,9 @@ export interface GameMoveResult {
   pgn: string;
   status: GameStatus;
   turn: Color;
+  san?: string;
+  from?: string;
+  to?: string;
 }
 
 export interface GameState {
@@ -48,8 +56,8 @@ export interface Game {
   startedAt?: Date | null;
   endedAt?: Date | null;
   createdAt: Date;
-  whitePlayer?: User | null;
-  blackPlayer?: User | null;
+  whitePlayer?: ChessUser | null;
+  blackPlayer?: ChessUser | null;
   moves: GameMove[];
   spectators: GameSpectator[];
 }

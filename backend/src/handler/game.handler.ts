@@ -1,5 +1,5 @@
 import { getIO } from "@/libs/socket";
-import { loadGame } from "@/games";
+import { loadGame, removeCachedGame } from "@/games";
 import { Request, Response } from "express";
 import { ChessGame } from "@/games/chess.game";
 import { Square } from "chess.js";
@@ -98,6 +98,9 @@ export const joinGame = async (req: AuthenticatedRequest, res: Response) => {
       status: "ONGOING",
       startedAt: new Date(),
     });
+
+    // Invalidate cache so socket handler loads fresh state with black player
+    await removeCachedGame(gameId);
 
     return sendResponse(res, 200, updated, "Joined game successfully");
   } catch (error) {
@@ -291,52 +294,6 @@ export const GetAllGameStats = async (
       res,
       500,
       "Failed to fetch game stats",
-      error instanceof Error ? error.message : "Unknown error"
-    );
-  }
-};
-
-export const resignGame = async (req: AuthenticatedRequest, res: Response) => {
-  try {
-    const { gameId } = req.params;
-    const userId = req.user!.id;
-
-    const game = await loadGame(gameId);
-    if (!game) return sendError(res, 404, "Game not found");
-
-    const state = game.getState();
-    let playerColor: "w" | "b" | null = null;
-    if (state.whitePlayer === userId) playerColor = "w";
-    else if (state.blackPlayer === userId) playerColor = "b";
-
-    if (!playerColor) {
-      return sendError(res, 403, "You are not a player in this game");
-    }
-
-    // Update DB
-    const winner = playerColor === "w" ? "black_win" : "white_win";
-    const updated = await gameStorage.update(gameId, {
-      status: "FINISHED",
-      result: winner,
-      endedAt: new Date(),
-    });
-
-    // Emit event
-    const io = getIO();
-    io.of("/game")
-      .to(gameId)
-      .emit("gameResigned", {
-        winner: playerColor === "w" ? "b" : "w",
-        resignedBy: playerColor,
-      });
-
-    return sendResponse(res, 200, updated, "Game resigned successfully");
-  } catch (error) {
-    console.error("Error resigning game:", error);
-    return sendError(
-      res,
-      500,
-      "Failed to resign game",
       error instanceof Error ? error.message : "Unknown error"
     );
   }

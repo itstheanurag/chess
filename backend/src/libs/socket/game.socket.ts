@@ -1,7 +1,7 @@
 import { Namespace, Socket } from "socket.io";
 import { JoinGameData, User, MoveData } from "@/types";
 import { Square } from "chess.js";
-import { loadGame, cacheGame } from "@/games";
+import { loadGame, cacheGame, removeCachedGame } from "@/games";
 import { gameStorage } from "@/storage/game";
 
 export const initializeGameNamespace = (nsp: Namespace) => {
@@ -42,8 +42,17 @@ export const initializeGameNamespace = (nsp: Namespace) => {
           playerColor,
           roomId: gameId,
         });
+
+        if (game.isFull()) {
+          const dbGame = await gameStorage.findById(gameId);
+          if (dbGame && dbGame.status === "ONGOING") {
+            nsp.to(gameId).emit("gameStarted", {
+              gameState: state,
+              startedAt: dbGame.startedAt,
+            });
+          }
+        }
       } else {
-        // Spectator joining
         game.addSpectator(playerName || socket.user?.name || "Anonymous");
         await cacheGame(gameId, game);
 
@@ -173,6 +182,46 @@ export const initializeGameNamespace = (nsp: Namespace) => {
       // game.removePlayerOrSpectator(userId);
       await cacheGame(gameId, game);
       socket.to(gameId).emit("playerLeft", { userId });
+    });
+
+    /**
+     * --- RESIGN GAME ---
+     */
+    socket.on("resignGame", async (data: { room: string }) => {
+      const { room: gameId } = data;
+      const user = socket.user as User;
+      const userId = user.id;
+
+      const game = await loadGame(gameId);
+      if (!game) return;
+
+      const state = game.getState();
+      let playerColor: "w" | "b" | null = null;
+      if (state.whitePlayer === userId) playerColor = "w";
+      else if (state.blackPlayer === userId) playerColor = "b";
+
+      if (!playerColor) {
+        socket.emit("error", { message: "You are not a player in this game" });
+        return;
+      }
+
+      // Update DB
+      const winner = playerColor === "w" ? "black_win" : "white_win";
+      await gameStorage.update(gameId, {
+        status: "FINISHED",
+        result: winner,
+        endedAt: new Date(),
+      });
+
+      // Update cache? Or just remove it?
+      // Usually removing is safer as it forces reload.
+      await removeCachedGame(gameId); // Import this if not imported
+
+      nsp.to(gameId).emit("gameResigned", {
+        winner: playerColor === "w" ? "b" : "w",
+        resignedBy: playerColor,
+        gameState: { ...state, status: "checkmate" }, // sending checkmate as proxy for end of game for now, or update types
+      });
     });
 
     /**

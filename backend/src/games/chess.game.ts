@@ -78,6 +78,9 @@ export class ChessGame extends Chess {
       pgn: this.pgn(),
       turn: this.turn(),
       status: this.getGameStatus(),
+      san: result.san,
+      from: result.from,
+      to: result.to,
     };
   }
 
