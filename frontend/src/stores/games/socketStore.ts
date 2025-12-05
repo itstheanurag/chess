@@ -18,15 +18,21 @@ export const useGameSocketStore = create<GameSocketState>((set, get) => {
       set({ gameState, room: roomId, playerColor, isJoined: true });
     });
 
-    gameSocket.on("moveMade", ({ gameState }) => {
+    gameSocket.on("moveMade", ({ gameState, move }) => {
       chess.load(gameState.fen);
-      set({ gameState });
+      set({ gameState, lastMove: move });
+    });
+
+    gameSocket.on("gameStarted", ({ gameState, startedAt }) => {
+      chess.load(gameState.fen);
+      set({ gameState: { ...gameState, startedAt } });
     });
 
     gameSocket.on("gameReset", ({ gameState }) => {
       chess.reset();
       set({
         gameState,
+        lastMove: null,
         isJoined: false,
         room: null,
         playerColor: null,
@@ -37,16 +43,26 @@ export const useGameSocketStore = create<GameSocketState>((set, get) => {
 
     gameSocket.on(
       "gameResigned",
-      (data: { message?: string; gameState?: GameStateData }) => {
+      (data: {
+        message?: string;
+        gameState?: GameStateData;
+        winner?: string;
+        resignedBy?: string;
+      }) => {
         if (data?.message) {
           toast.info(data.message);
         }
         if (data?.gameState) {
-          // Update the chess instance with the new FEN if needed, though resignation usually ends the game
           if (data.gameState.fen) {
             chess.load(data.gameState.fen);
           }
-          set({ gameState: data.gameState });
+          set({
+            gameState: {
+              ...data.gameState,
+              winner: data.winner,
+              resignedBy: data.resignedBy,
+            },
+          });
         }
       }
     );
@@ -54,6 +70,7 @@ export const useGameSocketStore = create<GameSocketState>((set, get) => {
     gameSocket.on("disconnect", () => {
       set({
         gameState: null,
+        lastMove: null,
         isJoined: false,
         room: null,
         playerColor: null,
@@ -66,6 +83,7 @@ export const useGameSocketStore = create<GameSocketState>((set, get) => {
 
   return {
     gameState: null,
+    lastMove: null,
     selected: null,
     validMoves: [],
     isJoined: false,
@@ -116,6 +134,7 @@ export const useGameSocketStore = create<GameSocketState>((set, get) => {
       chess.reset();
       set({
         gameState: null,
+        lastMove: null,
         isJoined: false,
         room: null,
         playerColor: null,
@@ -136,6 +155,7 @@ export const useGameSocketStore = create<GameSocketState>((set, get) => {
       gameSocket = null;
       set({
         gameState: null,
+        lastMove: null,
         isJoined: false,
         room: null,
         playerColor: null,

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Navigate, useParams } from "react-router-dom";
+import { Navigate, useNavigate, useParams } from "react-router-dom";
 import {
   useGameStore,
   useUIStore,
@@ -16,13 +16,22 @@ const ChessGamePage = () => {
   const { gameId } = useParams<{ gameId: string }>();
   const { findOne } = useGameStore();
   const { setCollapsed } = useUIStore();
-  const { connect, joinGame, disconnect, resignGame, gameState } =
-    useGameSocketStore();
+  const {
+    connect,
+    joinGame,
+    disconnect,
+    resignGame,
+    gameState,
+    isJoined,
+    lastMove,
+  } = useGameSocketStore();
   const { authUser } = useAuthStore();
 
+  const navigate = useNavigate();
   const [game, setGame] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [showResignModal, setShowResignModal] = useState(false);
+  const [showGameOverModal, setShowGameOverModal] = useState(false);
 
   useEffect(() => {
     if (gameState) {
@@ -32,6 +41,31 @@ const ChessGamePage = () => {
       });
     }
   }, [gameState]);
+
+  useEffect(() => {
+    if (lastMove) {
+      setGame((prev: any) => {
+        if (!prev) return null;
+        // Check if move already exists to prevent duplicates
+        const lastPrevMove = prev.moves?.[prev.moves.length - 1];
+        if (
+          lastPrevMove &&
+          lastPrevMove.san === lastMove.san &&
+          lastPrevMove.to === lastMove.to
+        ) {
+          return prev;
+        }
+
+        return {
+          ...prev,
+          moves: [
+            ...(prev.moves || []),
+            { ...lastMove, fromSquare: lastMove.from, toSquare: lastMove.to },
+          ],
+        };
+      });
+    }
+  }, [lastMove]);
 
   useEffect(() => {
     // Auto-collapse sidebar to give maximum space to the board
@@ -61,7 +95,7 @@ const ChessGamePage = () => {
   }, [gameId, findOne]);
 
   useEffect(() => {
-    if (game && authUser && gameId) {
+    if (game && authUser && gameId && !isJoined) {
       const isPlayer =
         game.whitePlayer?.id === authUser.id ||
         game.blackPlayer?.id === authUser.id;
@@ -72,7 +106,13 @@ const ChessGamePage = () => {
         isSpectator: !isPlayer,
       });
     }
-  }, [game, authUser, gameId, joinGame]);
+  }, [game, authUser, gameId, joinGame, isJoined]);
+
+  useEffect(() => {
+    if (game?.resignedBy || game?.result || game?.status === "checkmate") {
+      setShowGameOverModal(true);
+    }
+  }, [game]);
 
   const handleResign = () => {
     setShowResignModal(true);
@@ -88,7 +128,11 @@ const ChessGamePage = () => {
     game &&
     (game.whitePlayer?.id === authUser.id ||
       game.blackPlayer?.id === authUser.id);
-  const isOngoing = game?.status === "ONGOING";
+
+  const isOngoing =
+    game?.status === "ONGOING" ||
+    game?.status === "active" ||
+    game?.status === "IN_PROGRESS";
 
   if (loading) {
     return (
@@ -163,6 +207,30 @@ const ChessGamePage = () => {
                 Confirm Resign
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Game Over Modal */}
+      {showGameOverModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-card border border-border p-6 rounded-xl shadow-xl max-w-sm w-full mx-4 animate-in fade-in zoom-in duration-200 text-center">
+            <h3 className="text-2xl font-bold mb-2">Game Over</h3>
+            <p className="text-muted-foreground mb-6">
+              {game.resignedBy
+                ? `${game.resignedBy === "w" ? "White" : "Black"} resigned.`
+                : "Game finished."}
+              <br />
+              {game.winner
+                ? `${game.winner === "w" ? "White" : "Black"} wins!`
+                : ""}
+            </p>
+            <button
+              onClick={() => navigate("/dashboard")}
+              className="w-full px-4 py-2 rounded-lg bg-primary text-primary-foreground font-medium hover:bg-primary/90 transition-colors"
+            >
+              Back to Dashboard
+            </button>
           </div>
         </div>
       )}

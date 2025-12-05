@@ -104,6 +104,7 @@ export interface GameStoreState {
 
 export interface GameSocketState {
   gameState: GameStateData | null;
+  lastMove: { from: string; to: string; san: string } | null;
   selected: Square | null;
   validMoves: Move[];
   isJoined: boolean;
